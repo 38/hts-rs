@@ -37,10 +37,7 @@ fn main() -> Result<(), std::io::Error> {
             .expect("Unable to call makefile for htslib");
     }
     println!("cargo:rustc-link-search={}/htslib/", base);
-
-    if env::var("SHARED_HTSLIB").unwrap_or("0".to_string()) == "1" {
-        println!("cargo:rustc-link-lib=hts");
-    }
+    println!("cargo:rustc-link-lib=hts");
 
     Ok(())
 }
