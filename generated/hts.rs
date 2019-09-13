@@ -165,6 +165,8 @@ pub const SIG_ATOMIC_MAX: u32 = 2147483647;
 pub const SIZE_MAX: i32 = -1;
 pub const WINT_MIN: u32 = 0;
 pub const WINT_MAX: u32 = 4294967295;
+pub const HTS_RESIZE_CLEAR: u32 = 1;
+pub const HTS_IDX_DELIM: &'static [u8; 8usize] = b"##idx##\0";
 pub const HTS_IDX_NOCOOR: i32 = -2;
 pub const HTS_IDX_START: i32 = -3;
 pub const HTS_IDX_REST: i32 = -4;
@@ -173,7 +175,11 @@ pub const HTS_FMT_CSI: u32 = 0;
 pub const HTS_FMT_BAI: u32 = 1;
 pub const HTS_FMT_TBI: u32 = 2;
 pub const HTS_FMT_CRAI: u32 = 3;
+pub const HTS_IDX_SAVE_REMOTE: u32 = 1;
+pub const HTS_IDX_SILENT_FAIL: u32 = 2;
 pub const HTS_PARSE_THOUSANDS_SEP: u32 = 1;
+pub const HTS_PARSE_ONE_COORD: u32 = 2;
+pub const HTS_PARSE_LIST: u32 = 4;
 pub const FT_UNKN: u32 = 0;
 pub const FT_GZ: u32 = 1;
 pub const FT_VCF: u32 = 2;
@@ -181,7 +187,7 @@ pub const FT_VCF_GZ: u32 = 3;
 pub const FT_BCF: u32 = 4;
 pub const FT_BCF_GZ: u32 = 5;
 pub const FT_STDIN: u32 = 8;
-pub const SAM_FORMAT_VERSION: &'static [u8; 4usize] = b"1.5\0";
+pub const SAM_FORMAT_VERSION: &'static [u8; 4usize] = b"1.6\0";
 pub const BAM_CMATCH: u32 = 0;
 pub const BAM_CINS: u32 = 1;
 pub const BAM_CDEL: u32 = 2;
@@ -293,23 +299,41 @@ pub struct max_align_t {
     pub __bindgen_padding_0: u64,
     pub __clang_max_align_nonce2: u128,
 }
+#[doc = "< All logging disabled."]
 pub const htsLogLevel_HTS_LOG_OFF: htsLogLevel = 0;
+#[doc = "< Logging of errors only."]
 pub const htsLogLevel_HTS_LOG_ERROR: htsLogLevel = 1;
+#[doc = "< Logging of errors and warnings."]
 pub const htsLogLevel_HTS_LOG_WARNING: htsLogLevel = 3;
+#[doc = "< Logging of errors, warnings, and normal but significant events."]
 pub const htsLogLevel_HTS_LOG_INFO: htsLogLevel = 4;
+#[doc = "< Logging of all except the most detailed debug events."]
 pub const htsLogLevel_HTS_LOG_DEBUG: htsLogLevel = 5;
+#[doc = "< All logging enabled."]
 pub const htsLogLevel_HTS_LOG_TRACE: htsLogLevel = 6;
+#[doc = " Log levels."]
 pub type htsLogLevel = u32;
 extern "C" {
+    #[doc = " Sets the selected log level."]
     pub fn hts_set_log_level(level: htsLogLevel);
 }
 extern "C" {
+    #[doc = " Gets the selected log level."]
     pub fn hts_get_log_level() -> htsLogLevel;
 }
 extern "C" {
     pub static mut hts_verbose: ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Logs an event."]
+    #[doc = " \\param severity      Severity of the event:"]
+    #[doc = "                      - HTS_LOG_ERROR means that something went wrong so that a task could not be completed."]
+    #[doc = "                      - HTS_LOG_WARNING means that something unexpected happened, but that execution can continue, perhaps in a degraded mode."]
+    #[doc = "                      - HTS_LOG_INFO means that something normal but significant happened."]
+    #[doc = "                      - HTS_LOG_DEBUG means that something normal and insignificant happened."]
+    #[doc = "                      - HTS_LOG_TRACE means that something happened that might be of interest when troubleshooting."]
+    #[doc = " \\param context       Context where the event occurred. Typically set to \"__func__\"."]
+    #[doc = " \\param format        Format string with placeholders, like printf."]
     pub fn hts_log(
         severity: htsLogLevel,
         context: *const ::std::os::raw::c_char,
@@ -339,18 +363,36 @@ pub struct hts_tpool {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __kstring_t {
+pub struct kstring_t {
     pub l: usize,
     pub m: usize,
     pub s: *mut ::std::os::raw::c_char,
 }
-pub type kstring_t = __kstring_t;
+extern "C" {
+    pub fn hts_resize_array_(
+        arg1: usize,
+        arg2: usize,
+        arg3: usize,
+        arg4: *mut ::std::os::raw::c_void,
+        arg5: *mut *mut ::std::os::raw::c_void,
+        arg6: ::std::os::raw::c_int,
+        arg7: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Wrapper function for free(). Enables memory deallocation across DLL"]
+    #[doc = " boundary. Should be used by all applications, which are compiled"]
+    #[doc = " with a different standard library than htslib and call htslib"]
+    #[doc = " methods that return dynamically allocated data."]
+    pub fn hts_free(ptr: *mut ::std::os::raw::c_void);
+}
 pub const htsFormatCategory_unknown_category: htsFormatCategory = 0;
 pub const htsFormatCategory_sequence_data: htsFormatCategory = 1;
 pub const htsFormatCategory_variant_data: htsFormatCategory = 2;
 pub const htsFormatCategory_index_file: htsFormatCategory = 3;
 pub const htsFormatCategory_region_list: htsFormatCategory = 4;
 pub const htsFormatCategory_category_maximum: htsFormatCategory = 32767;
+#[doc = " File I/O *"]
 pub type htsFormatCategory = u32;
 pub const htsExactFormat_unknown_format: htsExactFormat = 0;
 pub const htsExactFormat_binary_format: htsExactFormat = 1;
@@ -368,12 +410,18 @@ pub const htsExactFormat_tbi: htsExactFormat = 12;
 pub const htsExactFormat_bed: htsExactFormat = 13;
 pub const htsExactFormat_htsget: htsExactFormat = 14;
 pub const htsExactFormat_json: htsExactFormat = 14;
+pub const htsExactFormat_empty_format: htsExactFormat = 15;
+pub const htsExactFormat_fasta_format: htsExactFormat = 16;
+pub const htsExactFormat_fastq_format: htsExactFormat = 17;
+pub const htsExactFormat_fai_format: htsExactFormat = 18;
+pub const htsExactFormat_fqi_format: htsExactFormat = 19;
 pub const htsExactFormat_format_maximum: htsExactFormat = 32767;
 pub type htsExactFormat = u32;
 pub const htsCompression_no_compression: htsCompression = 0;
 pub const htsCompression_gzip: htsCompression = 1;
 pub const htsCompression_bgzf: htsCompression = 2;
 pub const htsCompression_custom: htsCompression = 3;
+pub const htsCompression_bzip2_compression: htsCompression = 4;
 pub const htsCompression_compression_maximum: htsCompression = 32767;
 pub type htsCompression = u32;
 #[repr(C)]
@@ -393,6 +441,12 @@ pub struct htsFormat__bindgen_ty_1 {
     pub minor: ::std::os::raw::c_short,
 }
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct __hts_idx_t {
+    _unused: [u8; 0],
+}
+pub type hts_idx_t = __hts_idx_t;
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct htsFile {
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u32>,
@@ -401,7 +455,11 @@ pub struct htsFile {
     pub fn_: *mut ::std::os::raw::c_char,
     pub fn_aux: *mut ::std::os::raw::c_char,
     pub fp: htsFile__bindgen_ty_1,
+    pub state: *mut ::std::os::raw::c_void,
     pub format: htsFormat,
+    pub idx: *mut hts_idx_t,
+    pub fnidx: *const ::std::os::raw::c_char,
+    pub bam_header: *mut sam_hdr_t,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -557,6 +615,8 @@ pub const hts_fmt_option_CRAM_OPT_USE_RANS: hts_fmt_option = 17;
 pub const hts_fmt_option_CRAM_OPT_REQUIRED_FIELDS: hts_fmt_option = 18;
 pub const hts_fmt_option_CRAM_OPT_LOSSY_NAMES: hts_fmt_option = 19;
 pub const hts_fmt_option_CRAM_OPT_BASES_PER_SLICE: hts_fmt_option = 20;
+pub const hts_fmt_option_CRAM_OPT_STORE_MD: hts_fmt_option = 21;
+pub const hts_fmt_option_CRAM_OPT_STORE_NM: hts_fmt_option = 22;
 pub const hts_fmt_option_HTS_OPT_COMPRESSION_LEVEL: hts_fmt_option = 100;
 pub const hts_fmt_option_HTS_OPT_NTHREADS: hts_fmt_option = 101;
 pub const hts_fmt_option_HTS_OPT_THREAD_POOL: hts_fmt_option = 102;
@@ -612,21 +672,70 @@ extern "C" {
     pub static mut seq_nt16_int: [::std::os::raw::c_int; 0usize];
 }
 extern "C" {
+    #[doc = "@abstract  Get the htslib version number"]
+    #[doc = "@return    For released versions, a string like \"N.N[.N]\"; or git describe"]
+    #[doc = "output if using a library built within a Git repository."]
     pub fn hts_version() -> *const ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = "@abstract    Determine format by peeking at the start of a file"]
+    #[doc = "@param fp    File opened for reading, positioned at the beginning"]
+    #[doc = "@param fmt   Format structure that will be filled out on return"]
+    #[doc = "@return      0 for success, or negative if an error occurred."]
     pub fn hts_detect_format(fp: *mut hFILE, fmt: *mut htsFormat) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = "@abstract    Get a human-readable description of the file format"]
+    #[doc = "@param fmt   Format structure holding type, version, compression, etc."]
+    #[doc = "@return      Description string, to be freed by the caller after use."]
     pub fn hts_format_description(format: *const htsFormat) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = "@abstract       Open a sequence data (SAM/BAM/CRAM) or variant data (VCF/BCF)"]
+    #[doc = "or possibly-compressed textual line-orientated file"]
+    #[doc = "@param fn       The file name or \"-\" for stdin/stdout. For indexed files"]
+    #[doc = "with a non-standard naming, the file name can include the"]
+    #[doc = "name of the index file delimited with HTS_IDX_DELIM"]
+    #[doc = "@param mode     Mode matching / [rwa][bceguxz0-9]* /"]
+    #[doc = "@discussion"]
+    #[doc = "With 'r' opens for reading; any further format mode letters are ignored"]
+    #[doc = "as the format is detected by checking the first few bytes or BGZF blocks"]
+    #[doc = "of the file.  With 'w' or 'a' opens for writing or appending, with format"]
+    #[doc = "specifier letters:"]
+    #[doc = "b  binary format (BAM, BCF, etc) rather than text (SAM, VCF, etc)"]
+    #[doc = "c  CRAM format"]
+    #[doc = "g  gzip compressed"]
+    #[doc = "u  uncompressed"]
+    #[doc = "z  bgzf compressed"]
+    #[doc = "[0-9]  zlib compression level"]
+    #[doc = "and with non-format option letters (for any of 'r'/'w'/'a'):"]
+    #[doc = "e  close the file on exec(2) (opens with O_CLOEXEC, where supported)"]
+    #[doc = "x  create the file exclusively (opens with O_EXCL, where supported)"]
+    #[doc = "Note that there is a distinction between 'u' and '0': the first yields"]
+    #[doc = "plain uncompressed output whereas the latter outputs uncompressed data"]
+    #[doc = "wrapped in the zlib format."]
+    #[doc = "@example"]
+    #[doc = "[rw]b  .. compressed BCF, BAM, FAI"]
+    #[doc = "[rw]bu .. uncompressed BCF"]
+    #[doc = "[rw]z  .. compressed VCF"]
+    #[doc = "[rw]   .. uncompressed VCF"]
     pub fn hts_open(
         fn_: *const ::std::os::raw::c_char,
         mode: *const ::std::os::raw::c_char,
     ) -> *mut htsFile;
 }
 extern "C" {
+    #[doc = "@abstract       Open a SAM/BAM/CRAM/VCF/BCF/etc file"]
+    #[doc = "@param fn       The file name or \"-\" for stdin/stdout"]
+    #[doc = "@param mode     Open mode, as per hts_open()"]
+    #[doc = "@param fmt      Optional format specific parameters"]
+    #[doc = "@discussion"]
+    #[doc = "See hts_open() for description of fn and mode."]
+    #[doc = "Opts contains a format string (sam, bam, cram, vcf, bcf) which will,"]
+    #[doc = "if defined, override mode.  Opts also contains a linked list of hts_opt"]
+    #[doc = "structures to apply to the open file handle.  These can contain things"]
+    #[doc = "like pointers to the reference or information on compression levels,"]
+    #[doc = "block sizes, etc."]
     pub fn hts_open_format(
         fn_: *const ::std::os::raw::c_char,
         mode: *const ::std::os::raw::c_char,
@@ -634,6 +743,9 @@ extern "C" {
     ) -> *mut htsFile;
 }
 extern "C" {
+    #[doc = "@abstract       Open an existing stream as a SAM/BAM/CRAM/VCF/BCF/etc file"]
+    #[doc = "@param fn       The already-open file handle"]
+    #[doc = "@param mode     Open mode, as per hts_open()"]
     pub fn hts_hopen(
         fp: *mut hFILE,
         fn_: *const ::std::os::raw::c_char,
@@ -641,15 +753,29 @@ extern "C" {
     ) -> *mut htsFile;
 }
 extern "C" {
+    #[doc = "@abstract  Close a file handle, flushing buffered data for output streams"]
+    #[doc = "@param fp  The file handle to be closed"]
+    #[doc = "@return    0 for success, or negative if an error occurred."]
     pub fn hts_close(fp: *mut htsFile) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = "@abstract  Returns the file's format information"]
+    #[doc = "@param fp  The file handle"]
+    #[doc = "@return    Read-only pointer to the file's htsFormat."]
     pub fn hts_get_format(fp: *mut htsFile) -> *const htsFormat;
 }
 extern "C" {
+    #[doc = "@ abstract      Returns a string containing the file format extension."]
+    #[doc = "@ param format  Format structure containing the file type."]
+    #[doc = "@ return        A string (\"sam\", \"bam\", etc) or \"?\" for unknown formats."]
     pub fn hts_format_file_extension(format: *const htsFormat) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = "@abstract  Sets a specified CRAM option on the open file handle."]
+    #[doc = "@param fp  The file handle open the open file."]
+    #[doc = "@param opt The CRAM_OPT_* option."]
+    #[doc = "@param ... Optional arguments, dependent on the option used."]
+    #[doc = "@return    0 for success, or negative if an error occurred."]
     pub fn hts_set_opt(fp: *mut htsFile, opt: hts_fmt_option, ...) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -666,6 +792,12 @@ extern "C" {
     ) -> *mut *mut ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = "@abstract       Parse comma-separated list or read list from a file"]
+    #[doc = "@param list     File name or comma-separated list"]
+    #[doc = "@param is_file"]
+    #[doc = "@param _n       Size of the output array (number of items read)"]
+    #[doc = "@return         NULL on failure or pointer to newly allocated array of"]
+    #[doc = "strings"]
     pub fn hts_readlist(
         fn_: *const ::std::os::raw::c_char,
         is_file: ::std::os::raw::c_int,
@@ -673,29 +805,50 @@ extern "C" {
     ) -> *mut *mut ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = "@abstract  Create extra threads to aid compress/decompression for this file"]
+    #[doc = "@param fp  The file handle"]
+    #[doc = "@param n   The number of worker threads to create"]
+    #[doc = "@return    0 for success, or negative if an error occurred."]
+    #[doc = "@notes     This function creates non-shared threads for use solely by fp."]
+    #[doc = "The hts_set_thread_pool function is the recommended alternative."]
     pub fn hts_set_threads(fp: *mut htsFile, n: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = "@abstract  Create extra threads to aid compress/decompression for this file"]
+    #[doc = "@param fp  The file handle"]
+    #[doc = "@param p   A pool of worker threads, previously allocated by hts_create_threads()."]
+    #[doc = "@return    0 for success, or negative if an error occurred."]
     pub fn hts_set_thread_pool(fp: *mut htsFile, p: *mut htsThreadPool) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = "@abstract  Adds a cache of decompressed blocks, potentially speeding up seeks."]
+    #[doc = "This may not work for all file types (currently it is bgzf only)."]
+    #[doc = "@param fp  The file handle"]
+    #[doc = "@param n   The size of cache, in bytes"]
     pub fn hts_set_cache_size(fp: *mut htsFile, n: ::std::os::raw::c_int);
 }
 extern "C" {
+    #[doc = "@abstract  Set .fai filename for a file opened for reading"]
+    #[doc = "@return    0 for success, negative on failure"]
+    #[doc = "@discussion"]
+    #[doc = "Called before *_hdr_read(), this provides the name of a .fai file"]
+    #[doc = "used to provide a reference list if the htsFile contains no @SQ headers."]
     pub fn hts_set_fai_filename(
         fp: *mut htsFile,
         fn_aux: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = "@abstract  Determine whether a given htsFile contains a valid EOF block"]
+    #[doc = "@return    3 for a non-EOF checkable filetype;"]
+    #[doc = "2 for an unseekable file type where EOF cannot be checked;"]
+    #[doc = "1 for a valid EOF block;"]
+    #[doc = "0 for if the EOF marker is absent when it should be present;"]
+    #[doc = "-1 (with errno set) on failure"]
+    #[doc = "@discussion"]
+    #[doc = "Check if the BGZF end-of-file (EOF) marker is present"]
     pub fn hts_check_EOF(fp: *mut htsFile) -> ::std::os::raw::c_int;
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __hts_idx_t {
-    _unused: [u8; 0],
-}
-pub type hts_idx_t = __hts_idx_t;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hts_pair32_t {
@@ -719,8 +872,8 @@ pub struct hts_pair64_max_t {
 #[derive(Debug, Copy, Clone)]
 pub struct hts_reglist_t {
     pub reg: *const ::std::os::raw::c_char,
-    pub tid: ::std::os::raw::c_int,
     pub intervals: *mut hts_pair32_t,
+    pub tid: ::std::os::raw::c_int,
     pub count: u32,
     pub min_beg: u32,
     pub max_end: u32,
@@ -753,12 +906,19 @@ pub struct hts_itr_t {
     pub end: ::std::os::raw::c_int,
     pub n_off: ::std::os::raw::c_int,
     pub i: ::std::os::raw::c_int,
+    pub n_reg: ::std::os::raw::c_int,
+    pub reg_list: *mut hts_reglist_t,
     pub curr_tid: ::std::os::raw::c_int,
     pub curr_beg: ::std::os::raw::c_int,
     pub curr_end: ::std::os::raw::c_int,
+    pub curr_reg: ::std::os::raw::c_int,
+    pub curr_intv: ::std::os::raw::c_int,
     pub curr_off: u64,
-    pub off: *mut hts_pair64_t,
+    pub nocoor_off: u64,
+    pub off: *mut hts_pair64_max_t,
     pub readrec: hts_readrec_func,
+    pub seek: hts_seek_func,
+    pub tell: hts_tell_func,
     pub bins: hts_itr_t__bindgen_ty_1,
 }
 #[repr(C)]
@@ -769,106 +929,6 @@ pub struct hts_itr_t__bindgen_ty_1 {
     pub a: *mut ::std::os::raw::c_int,
 }
 impl hts_itr_t {
-    #[inline]
-    pub fn read_rest(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_read_rest(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn finished(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_finished(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn is_cram(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_is_cram(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn dummy(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 29u8) as u32) }
-    }
-    #[inline]
-    pub fn set_dummy(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(3usize, 29u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        read_rest: u32,
-        finished: u32,
-        is_cram: u32,
-        dummy: u32,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize], u32> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize], u32> =
-            Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let read_rest: u32 = unsafe { ::std::mem::transmute(read_rest) };
-            read_rest as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let finished: u32 = unsafe { ::std::mem::transmute(finished) };
-            finished as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let is_cram: u32 = unsafe { ::std::mem::transmute(is_cram) };
-            is_cram as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 29u8, {
-            let dummy: u32 = unsafe { ::std::mem::transmute(dummy) };
-            dummy as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct aux_key_t {
-    pub key: ::std::os::raw::c_int,
-    pub min_off: u64,
-    pub max_off: u64,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct hts_itr_multi_t {
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u32>,
-    pub reg_list: *mut hts_reglist_t,
-    pub n_reg: ::std::os::raw::c_int,
-    pub i: ::std::os::raw::c_int,
-    pub curr_tid: ::std::os::raw::c_int,
-    pub curr_intv: ::std::os::raw::c_int,
-    pub curr_beg: ::std::os::raw::c_int,
-    pub curr_end: ::std::os::raw::c_int,
-    pub curr_reg: ::std::os::raw::c_int,
-    pub off: *mut hts_pair64_max_t,
-    pub n_off: ::std::os::raw::c_int,
-    pub curr_off: u64,
-    pub nocoor_off: u64,
-    pub readrec: hts_readrec_func,
-    pub seek: hts_seek_func,
-    pub tell: hts_tell_func,
-}
-impl hts_itr_multi_t {
     #[inline]
     pub fn read_rest(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
@@ -914,14 +974,25 @@ impl hts_itr_multi_t {
         }
     }
     #[inline]
+    pub fn multi(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_multi(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
     pub fn dummy(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 28u8) as u32) }
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 27u8) as u32) }
     }
     #[inline]
     pub fn set_dummy(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(4usize, 28u8, val as u64)
+            self._bitfield_1.set(5usize, 27u8, val as u64)
         }
     }
     #[inline]
@@ -930,6 +1001,7 @@ impl hts_itr_multi_t {
         finished: u32,
         is_cram: u32,
         nocoor: u32,
+        multi: u32,
         dummy: u32,
     ) -> __BindgenBitfieldUnit<[u8; 4usize], u32> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize], u32> =
@@ -950,14 +1022,34 @@ impl hts_itr_multi_t {
             let nocoor: u32 = unsafe { ::std::mem::transmute(nocoor) };
             nocoor as u64
         });
-        __bindgen_bitfield_unit.set(4usize, 28u8, {
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let multi: u32 = unsafe { ::std::mem::transmute(multi) };
+            multi as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 27u8, {
             let dummy: u32 = unsafe { ::std::mem::transmute(dummy) };
             dummy as u64
         });
         __bindgen_bitfield_unit
     }
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct aux_key_t {
+    pub key: ::std::os::raw::c_int,
+    pub min_off: u64,
+    pub max_off: u64,
+}
+pub type hts_itr_multi_t = hts_itr_t;
 extern "C" {
+    #[doc = " Create a BAI/CSI/TBI type index structure"]
+    #[doc = "** @param n          Initial number of targets"]
+    #[doc = "@param fmt        Format, one of HTS_FMT_CSI, HTS_FMT_BAI or HTS_FMT_TBI"]
+    #[doc = "@param offset0    Initial file offset"]
+    #[doc = "@param min_shift  Number of bits for the minimal interval"]
+    #[doc = "@param n_lvls     Number of levels in the binning index"]
+    #[doc = "@return An initialised hts_idx_t struct on success; NULL on failure"]
+    #[doc = "*/"]
     pub fn hts_idx_init(
         n: ::std::os::raw::c_int,
         fmt: ::std::os::raw::c_int,
@@ -967,9 +1059,24 @@ extern "C" {
     ) -> *mut hts_idx_t;
 }
 extern "C" {
+    #[doc = " Free a BAI/CSI/TBI type index"]
+    #[doc = "** @param idx   Index structure to free"]
+    #[doc = "*/"]
     pub fn hts_idx_destroy(idx: *mut hts_idx_t);
 }
 extern "C" {
+    #[doc = " Push an index entry"]
+    #[doc = "** @param idx        Index"]
+    #[doc = "@param tid        Target id"]
+    #[doc = "@param beg        Range start (zero-based)"]
+    #[doc = "@param end        Range end (zero-based, half-open)"]
+    #[doc = "@param offset     File offset"]
+    #[doc = "@param is_mapped  Range corresponds to a mapped read"]
+    #[doc = "@return 0 on success; -1 on failure"]
+    #[doc = ""]
+    #[doc = "The @p is_mapped parameter is used to update the n_mapped / n_unmapped counts"]
+    #[doc = "stored in the meta-data bin."]
+    #[doc = "*/"]
     pub fn hts_idx_push(
         idx: *mut hts_idx_t,
         tid: ::std::os::raw::c_int,
@@ -980,9 +1087,40 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn hts_idx_finish(idx: *mut hts_idx_t, final_offset: u64);
+    #[doc = " Finish building an index"]
+    #[doc = "** @param idx          Index"]
+    #[doc = "@param final_offset Last file offset"]
+    #[doc = "@return 0 on success; non-zero on failure."]
+    #[doc = "*/"]
+    pub fn hts_idx_finish(idx: *mut hts_idx_t, final_offset: u64) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Returns index format"]
+    #[doc = "** @param idx   Index"]
+    #[doc = "@return One of HTS_FMT_CSI, HTS_FMT_BAI or HTS_FMT_TBI"]
+    #[doc = "*/"]
+    pub fn hts_idx_fmt(idx: *mut hts_idx_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Add name to TBI index meta-data"]
+    #[doc = "** @param idx   Index"]
+    #[doc = "@param tid   Target identifier"]
+    #[doc = "@param name  Target name"]
+    #[doc = "@return Index number of name in names list on success; -1 on failure."]
+    #[doc = "*/"]
+    pub fn hts_idx_tbi_name(
+        idx: *mut hts_idx_t,
+        tid: ::std::os::raw::c_int,
+        name: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Save an index to a file"]
+    #[doc = "** @param idx  Index to be written"]
+    #[doc = "@param fn   Input BAM/BCF/etc filename, to which .bai/.csi/etc will be added"]
+    #[doc = "@param fmt  One of the HTS_FMT_* index formats"]
+    #[doc = "@return  0 if successful, or negative if an error occurred."]
+    #[doc = "*/"]
     pub fn hts_idx_save(
         idx: *const hts_idx_t,
         fn_: *const ::std::os::raw::c_char,
@@ -990,6 +1128,13 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Save an index to a specific file"]
+    #[doc = "** @param idx    Index to be written"]
+    #[doc = "@param fn     Input BAM/BCF/etc filename"]
+    #[doc = "@param fnidx  Output filename, or NULL to add .bai/.csi/etc to @a fn"]
+    #[doc = "@param fmt    One of the HTS_FMT_* index formats"]
+    #[doc = "@return  0 if successful, or negative if an error occurred."]
+    #[doc = "*/"]
     pub fn hts_idx_save_as(
         idx: *const hts_idx_t,
         fn_: *const ::std::os::raw::c_char,
@@ -998,21 +1143,110 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Load an index file"]
+    #[doc = "** @param fn   BAM/BCF/etc filename, to which .bai/.csi/etc will be added or"]
+    #[doc = "the extension substituted, to search for an existing index file."]
+    #[doc = "In case of a non-standard naming, the file name can include the"]
+    #[doc = "name of the index file delimited with HTS_IDX_DELIM."]
+    #[doc = "@param fmt  One of the HTS_FMT_* index formats"]
+    #[doc = "@return  The index, or NULL if an error occurred."]
+    #[doc = ""]
+    #[doc = "If @p fn contains the string \"##idx##\" (HTS_IDX_DELIM), the part before"]
+    #[doc = "the delimiter will be used as the name of the data file and the part after"]
+    #[doc = "it will be used as the name of the index."]
+    #[doc = ""]
+    #[doc = "Otherwise, this function tries to work out the index name as follows:"]
+    #[doc = ""]
+    #[doc = "It will try appending \".csi\" to @p fn"]
+    #[doc = "It will try substituting an existing suffix (e.g. .bam, .vcf) with \".csi\""]
+    #[doc = "Then, if @p fmt is HTS_FMT_BAI:"]
+    #[doc = "It will try appending \".bai\" to @p fn"]
+    #[doc = "To will substituting the existing suffix (e.g. .bam) with \".bai\""]
+    #[doc = "else if @p fmt is HTS_FMT_TBI:"]
+    #[doc = "It will try appending \".tbi\" to @p fn"]
+    #[doc = "To will substituting the existing suffix (e.g. .vcf) with \".tbi\""]
+    #[doc = ""]
+    #[doc = "If the index file is remote (served over a protocol like https), first a check"]
+    #[doc = "is made to see is a locally cached copy is available.  This is done for all"]
+    #[doc = "of the possible names listed above.  If a cached copy is not available then"]
+    #[doc = "the index will be downloaded and stored in the current working directory,"]
+    #[doc = "with the same name as the remote index."]
+    #[doc = ""]
+    #[doc = "Equivalent to hts_idx_load3(fn, NULL, fmt, HTS_IDX_SAVE_REMOTE);"]
+    #[doc = "*/"]
     pub fn hts_idx_load(
         fn_: *const ::std::os::raw::c_char,
         fmt: ::std::os::raw::c_int,
     ) -> *mut hts_idx_t;
 }
 extern "C" {
+    #[doc = " Load a specific index file"]
+    #[doc = "** @param fn     Input BAM/BCF/etc filename"]
+    #[doc = "@param fnidx  The input index filename"]
+    #[doc = "@return  The index, or NULL if an error occurred."]
+    #[doc = ""]
+    #[doc = "Equivalent to hts_idx_load3(fn, fnidx, 0, 0);"]
+    #[doc = ""]
+    #[doc = "This function will not attempt to save index files locally."]
+    #[doc = "*/"]
     pub fn hts_idx_load2(
         fn_: *const ::std::os::raw::c_char,
         fnidx: *const ::std::os::raw::c_char,
     ) -> *mut hts_idx_t;
 }
 extern "C" {
+    #[doc = " Load a specific index file"]
+    #[doc = "** @param fn     Input BAM/BCF/etc filename"]
+    #[doc = "@param fnidx  The input index filename"]
+    #[doc = "@param fmt    One of the HTS_FMT_* index formats"]
+    #[doc = "@param flags  Flags to alter behaviour (see description)"]
+    #[doc = "@return  The index, or NULL if an error occurred."]
+    #[doc = ""]
+    #[doc = "If @p fnidx is NULL, the index name will be derived from @p fn in the"]
+    #[doc = "same way as hts_idx_load()."]
+    #[doc = ""]
+    #[doc = "If @p fnidx is not NULL, @p fmt is ignored."]
+    #[doc = ""]
+    #[doc = "The @p flags parameter can be set to a combination of the following"]
+    #[doc = "values:"]
+    #[doc = ""]
+    #[doc = "HTS_IDX_SAVE_REMOTE   Save a local copy of any remote indexes"]
+    #[doc = "HTS_IDX_SILENT_FAIL   Fail silently if the index is not present"]
+    #[doc = "*/"]
+    pub fn hts_idx_load3(
+        fn_: *const ::std::os::raw::c_char,
+        fnidx: *const ::std::os::raw::c_char,
+        fmt: ::std::os::raw::c_int,
+        flags: ::std::os::raw::c_int,
+    ) -> *mut hts_idx_t;
+}
+extern "C" {
+    #[doc = " Get extra index meta-data"]
+    #[doc = "** @param idx    The index"]
+    #[doc = "@param l_meta Pointer to where the length of the extra data is stored"]
+    #[doc = "@return Pointer to the extra data if present; NULL otherwise"]
+    #[doc = ""]
+    #[doc = "Indexes (both .tbi and .csi) made by tabix include extra data about"]
+    #[doc = "the indexed file.  The returns a pointer to this data.  Note that the"]
+    #[doc = "data is stored exactly as it is in the index.  Callers need to interpret"]
+    #[doc = "the results themselves, including knowing what sort of data to expect;"]
+    #[doc = "byte swapping etc."]
+    #[doc = "*/"]
     pub fn hts_idx_get_meta(idx: *mut hts_idx_t, l_meta: *mut u32) -> *mut u8;
 }
 extern "C" {
+    #[doc = " Set extra index meta-data"]
+    #[doc = "** @param idx     The index"]
+    #[doc = "@param l_meta  Length of data"]
+    #[doc = "@param meta    Pointer to the extra data"]
+    #[doc = "@param is_copy If not zero, a copy of the data is taken"]
+    #[doc = "@return 0 on success; -1 on failure (out of memory)."]
+    #[doc = ""]
+    #[doc = "Sets the data that is returned by hts_idx_get_meta()."]
+    #[doc = ""]
+    #[doc = "If is_copy != 0, a copy of the input data is taken.  If not, ownership of"]
+    #[doc = "the data pointed to by *meta passes to the index."]
+    #[doc = "*/"]
     pub fn hts_idx_set_meta(
         idx: *mut hts_idx_t,
         l_meta: u32,
@@ -1021,6 +1255,20 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Get number of mapped and unmapped reads from an index"]
+    #[doc = "** @param      idx      Index"]
+    #[doc = "@param      tid      Target ID"]
+    #[doc = "@param[out] mapped   Location to store number of mapped reads"]
+    #[doc = "@param[out] unmapped Location to store number of unmapped reads"]
+    #[doc = "@return 0 on success; -1 on failure (data not available)"]
+    #[doc = ""]
+    #[doc = "BAI and CSI indexes store information on the number of reads for each"]
+    #[doc = "target that were mapped or unmapped (unmapped reads will generally have"]
+    #[doc = "a paired read that is mapped to the target).  This function returns this"]
+    #[doc = "infomation if it is available."]
+    #[doc = ""]
+    #[doc = "@note Cram CRAI indexes do not include this information."]
+    #[doc = "*/"]
     pub fn hts_idx_get_stat(
         idx: *const hts_idx_t,
         tid: ::std::os::raw::c_int,
@@ -1029,34 +1277,41 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Return the number of unplaced reads from an index"]
+    #[doc = "** @param idx    Index"]
+    #[doc = "@return Unplaced reads count"]
+    #[doc = ""]
+    #[doc = "Unplaced reads are not linked to any reference (e.g. RNAME is '*' in SAM"]
+    #[doc = "files)."]
+    #[doc = "*/"]
     pub fn hts_idx_get_n_no_coor(idx: *const hts_idx_t) -> u64;
 }
 extern "C" {
+    #[doc = " Parse a numeric string"]
+    #[doc = "** The number may be expressed in scientific notation, and optionally may"]
+    #[doc = "contain commas in the integer part (before any decimal point or E notation)."]
+    #[doc = "@param str     String to be parsed"]
+    #[doc = "@param strend  If non-NULL, set on return to point to the first character"]
+    #[doc = "in @a str after those forming the parsed number"]
+    #[doc = "@param flags   Or'ed-together combination of HTS_PARSE_* flags"]
+    #[doc = "@return  Converted value of the parsed number."]
+    #[doc = ""]
+    #[doc = "When @a strend is NULL, a warning will be printed (if hts_verbose is HTS_LOG_WARNING"]
+    #[doc = "or more) if there are any trailing characters after the number."]
+    #[doc = "*/"]
     pub fn hts_parse_decimal(
         str: *const ::std::os::raw::c_char,
         strend: *mut *mut ::std::os::raw::c_char,
         flags: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_longlong;
 }
-extern "C" {
-    pub fn hts_parse_reg(
-        str: *const ::std::os::raw::c_char,
-        beg: *mut ::std::os::raw::c_int,
-        end: *mut ::std::os::raw::c_int,
-    ) -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn hts_itr_query(
-        idx: *const hts_idx_t,
-        tid: ::std::os::raw::c_int,
-        beg: ::std::os::raw::c_int,
-        end: ::std::os::raw::c_int,
-        readrec: hts_readrec_func,
-    ) -> *mut hts_itr_t;
-}
-extern "C" {
-    pub fn hts_itr_destroy(iter: *mut hts_itr_t);
-}
+#[doc = " Parse a \"CHR:START-END\"-style region string"]
+#[doc = "** @param str  String to be parsed"]
+#[doc = "@param beg  Set on return to the 0-based start of the region"]
+#[doc = "@param end  Set on return to the 1-based end of the region"]
+#[doc = "@return  Pointer to the colon or '\\0' after the reference sequence name,"]
+#[doc = "or NULL if @a str could not be parsed."]
+#[doc = "*/"]
 pub type hts_name2id_f = ::std::option::Option<
     unsafe extern "C" fn(
         arg1: *mut ::std::os::raw::c_void,
@@ -1069,6 +1324,108 @@ pub type hts_id2name_f = ::std::option::Option<
         arg2: ::std::os::raw::c_int,
     ) -> *const ::std::os::raw::c_char,
 >;
+extern "C" {
+    pub fn hts_parse_reg(
+        str: *const ::std::os::raw::c_char,
+        beg: *mut ::std::os::raw::c_int,
+        end: *mut ::std::os::raw::c_int,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Parse a \"CHR:START-END\"-style region string"]
+    #[doc = "** @param str   String to be parsed"]
+    #[doc = "@param tid   Set on return (if not NULL) to be reference index (-1 if invalid)"]
+    #[doc = "@param beg   Set on return to the 0-based start of the region"]
+    #[doc = "@param end   Set on return to the 1-based end of the region"]
+    #[doc = "@param getid Function pointer.  Called if not NULL to set tid."]
+    #[doc = "@param hdr   Caller data passed to getid."]
+    #[doc = "@param flags Bitwise HTS_PARSE_* flags listed above."]
+    #[doc = "@return      Pointer to the byte after the end of the entire region"]
+    #[doc = "specifier (including any trailing comma) on success,"]
+    #[doc = "or NULL if @a str could not be parsed."]
+    #[doc = ""]
+    #[doc = "A variant of hts_parse_reg which is reference-id aware.  It uses"]
+    #[doc = "the iterator name2id callbacks to validate the region tokenisation works."]
+    #[doc = ""]
+    #[doc = "This is necessary due to GRCh38 HLA additions which have reference names"]
+    #[doc = "like \"HLA-DRB1*12:17\"."]
+    #[doc = ""]
+    #[doc = "To work around ambiguous parsing issues, eg both \"chr1\" and \"chr1:100-200\""]
+    #[doc = "are reference names, quote using curly braces."]
+    #[doc = "Thus \"{chr1}:100-200\" and \"{chr1:100-200}\" disambiguate the above example."]
+    #[doc = ""]
+    #[doc = "Flags are used to control how parsing works, and can be one of the below."]
+    #[doc = ""]
+    #[doc = "HTS_PARSE_THOUSANDS_SEP:"]
+    #[doc = "Ignore commas in numbers.  For example with this flag 1,234,567"]
+    #[doc = "is interpreted as 1234567."]
+    #[doc = ""]
+    #[doc = "HTS_PARSE_LIST:"]
+    #[doc = "If present, the region is assmed to be a comma separated list and"]
+    #[doc = "position parsing will not contain commas (this implicitly"]
+    #[doc = "clears HTS_PARSE_THOUSANDS_SEP in the call to hts_parse_decimal)."]
+    #[doc = "On success the return pointer will be the start of the next region, ie"]
+    #[doc = "the character after the comma.  (If *ret != '\\0' then the caller can"]
+    #[doc = "assume another region is present in the list.)"]
+    #[doc = ""]
+    #[doc = "If not set then positions may contain commas.  In this case the return"]
+    #[doc = "value should point to the end of the string, or NULL on failure."]
+    #[doc = ""]
+    #[doc = "HTS_PARSE_ONE_COORD:"]
+    #[doc = "If present, X:100 is treated as the single base pair region X:100-100."]
+    #[doc = "In this case X:-100 is shorthand for X:1-100 and X:100- is X:100-<end>."]
+    #[doc = "(This is the standard bcftools region convention.)"]
+    #[doc = ""]
+    #[doc = "When not set X:100 is considered to be X:100-<end> where <end> is"]
+    #[doc = "the end of chromosome X (set to INT_MAX here).  X:100- and X:-100 are"]
+    #[doc = "invalid."]
+    #[doc = "(This is the standard samtools region convention.)"]
+    #[doc = ""]
+    #[doc = "Note the supplied string expects 1 based inclusive coordinates, but the"]
+    #[doc = "returned coordinates start from 0 and are half open, so pos0 is valid"]
+    #[doc = "for use in e.g. \"for (pos0 = beg; pos0 < end; pos0++) {...}\""]
+    #[doc = ""]
+    #[doc = "If NULL is returned, the value in tid mat give additional information"]
+    #[doc = "about the error:"]
+    #[doc = ""]
+    #[doc = "-2   Failed to parse @p hdr; or out of memory"]
+    #[doc = "-1   The reference in @p str has mismatched braces, or does not"]
+    #[doc = "exist in @p hdr"]
+    #[doc = ">= 0 The specified range in @p str could not be parsed"]
+    #[doc = "*/"]
+    pub fn hts_parse_region(
+        str: *const ::std::os::raw::c_char,
+        tid: *mut ::std::os::raw::c_int,
+        beg: *mut i64,
+        end: *mut i64,
+        getid: hts_name2id_f,
+        hdr: *mut ::std::os::raw::c_void,
+        flags: ::std::os::raw::c_int,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Create a single-region iterator"]
+    #[doc = "** @param idx      Index"]
+    #[doc = "@param tid      Target ID"]
+    #[doc = "@param beg      Start of region"]
+    #[doc = "@param end      End of region"]
+    #[doc = "@param readrec  Callback to read a record from the input file"]
+    #[doc = "@return An iterator on success; NULL on failure"]
+    #[doc = "*/"]
+    pub fn hts_itr_query(
+        idx: *const hts_idx_t,
+        tid: ::std::os::raw::c_int,
+        beg: ::std::os::raw::c_int,
+        end: ::std::os::raw::c_int,
+        readrec: hts_readrec_func,
+    ) -> *mut hts_itr_t;
+}
+extern "C" {
+    #[doc = " Free an iterator"]
+    #[doc = "** @param iter   Iterator to free"]
+    #[doc = "*/"]
+    pub fn hts_itr_destroy(iter: *mut hts_itr_t);
+}
 pub type hts_itr_query_func = ::std::option::Option<
     unsafe extern "C" fn(
         idx: *const hts_idx_t,
@@ -1079,6 +1436,16 @@ pub type hts_itr_query_func = ::std::option::Option<
     ) -> *mut hts_itr_t,
 >;
 extern "C" {
+    #[doc = " Create a single-region iterator from a text region specification"]
+    #[doc = "** @param idx       Index"]
+    #[doc = "@param reg       Region specifier"]
+    #[doc = "@param getid     Callback function to return the target ID for a name"]
+    #[doc = "@param hdr       Input file header"]
+    #[doc = "@param itr_query Callback function returning an iterator for a numeric tid,"]
+    #[doc = "start and end position"]
+    #[doc = "@param readrec   Callback to read a record from the input file"]
+    #[doc = "@return An iterator on success; NULL on error"]
+    #[doc = "*/"]
     pub fn hts_itr_querys(
         idx: *const hts_idx_t,
         reg: *const ::std::os::raw::c_char,
@@ -1089,6 +1456,13 @@ extern "C" {
     ) -> *mut hts_itr_t;
 }
 extern "C" {
+    #[doc = " Return the next record from an iterator"]
+    #[doc = "** @param fp      Input file handle"]
+    #[doc = "@param iter    Iterator"]
+    #[doc = "@param r       Pointer to record placeholder"]
+    #[doc = "@param data    Data passed to the readrec callback"]
+    #[doc = "@return >= 0 on success, -1 when there is no more data, < -1 on error"]
+    #[doc = "*/"]
     pub fn hts_itr_next(
         fp: *mut BGZF,
         iter: *mut hts_itr_t,
@@ -1097,6 +1471,16 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Return a list of target names from an index"]
+    #[doc = "** @param      idx    Index"]
+    #[doc = "@param[out] n      Location to store the number of targets"]
+    #[doc = "@param      getid  Callback function to get the name for a target ID"]
+    #[doc = "@param      hdr    Header from indexed file"]
+    #[doc = "@return An array of pointers to the names on success; NULL on failure"]
+    #[doc = ""]
+    #[doc = "@note The names are pointers into the header data structure.  When cleaning"]
+    #[doc = "up, only the array should be freed, not the names."]
+    #[doc = "*/"]
     pub fn hts_idx_seqnames(
         idx: *const hts_idx_t,
         n: *mut ::std::os::raw::c_int,
@@ -1104,22 +1488,30 @@ extern "C" {
         hdr: *mut ::std::os::raw::c_void,
     ) -> *mut *const ::std::os::raw::c_char;
 }
+#[doc = " Iterator with multiple regions *"]
 pub type hts_itr_multi_query_func = ::std::option::Option<
-    unsafe extern "C" fn(idx: *const hts_idx_t, itr: *mut hts_itr_multi_t) -> *mut hts_itr_multi_t,
+    unsafe extern "C" fn(idx: *const hts_idx_t, itr: *mut hts_itr_t) -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    pub fn hts_itr_multi_bam(
-        idx: *const hts_idx_t,
-        iter: *mut hts_itr_multi_t,
-    ) -> *mut hts_itr_multi_t;
+    pub fn hts_itr_multi_bam(idx: *const hts_idx_t, iter: *mut hts_itr_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn hts_itr_multi_cram(
-        idx: *const hts_idx_t,
-        iter: *mut hts_itr_multi_t,
-    ) -> *mut hts_itr_multi_t;
+    pub fn hts_itr_multi_cram(idx: *const hts_idx_t, iter: *mut hts_itr_t)
+        -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Create a multi-region iterator from a region list"]
+    #[doc = "** @param idx          Index"]
+    #[doc = "@param reglist      Region list"]
+    #[doc = "@param count        Number of items in region list"]
+    #[doc = "@param getid        Callback to convert names to target IDs"]
+    #[doc = "@param hdr          Indexed file header (passed to getid)"]
+    #[doc = "@param itr_specific Filetype-specific callback function"]
+    #[doc = "@param readrec      Callback to read an input file record"]
+    #[doc = "@param seek         Callback to seek in the input file"]
+    #[doc = "@param tell         Callback to return current input file location"]
+    #[doc = "@return An iterator on success; NULL on failure"]
+    #[doc = "*/"]
     pub fn hts_itr_regions(
         idx: *const hts_idx_t,
         reglist: *mut hts_reglist_t,
@@ -1130,24 +1522,49 @@ extern "C" {
         readrec: hts_readrec_func,
         seek: hts_seek_func,
         tell: hts_tell_func,
-    ) -> *mut hts_itr_multi_t;
+    ) -> *mut hts_itr_t;
 }
 extern "C" {
+    #[doc = " Return the next record from an iterator"]
+    #[doc = "** @param fp      Input file handle"]
+    #[doc = "@param iter    Iterator"]
+    #[doc = "@param r       Pointer to record placeholder"]
+    #[doc = "@return >= 0 on success, -1 when there is no more data, < -1 on error"]
+    #[doc = "*/"]
     pub fn hts_itr_multi_next(
         fd: *mut htsFile,
-        iter: *mut hts_itr_multi_t,
+        iter: *mut hts_itr_t,
         r: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn hts_reglist_free(reglist: *mut hts_reglist_t, count: ::std::os::raw::c_int);
+    #[doc = " Create a region list from a char array"]
+    #[doc = "** @param argv      Char array of target:interval elements, e.g. chr1:2500-3600, chr1:5100, chr2"]
+    #[doc = "@param argc      Number of items in the array"]
+    #[doc = "@param r_count   Pointer to the number of items in the resulting region list"]
+    #[doc = "@param hdr       Header for the sam/bam/cram file"]
+    #[doc = "@param getid     Callback to convert target names to target ids."]
+    #[doc = "@return  A region list on success, NULL on failure"]
+    #[doc = "*/"]
+    pub fn hts_reglist_create(
+        argv: *mut *mut ::std::os::raw::c_char,
+        argc: ::std::os::raw::c_int,
+        r_count: *mut ::std::os::raw::c_int,
+        hdr: *mut ::std::os::raw::c_void,
+        getid: hts_name2id_f,
+    ) -> *mut hts_reglist_t;
 }
 extern "C" {
-    pub fn hts_itr_multi_destroy(iter: *mut hts_itr_multi_t);
+    #[doc = " Free a region list"]
+    #[doc = "** @param reglist    Region list"]
+    #[doc = "@param count      Number of items in the list"]
+    #[doc = "*/"]
+    pub fn hts_reglist_free(reglist: *mut hts_reglist_t, count: ::std::os::raw::c_int);
 }
 extern "C" {
     pub fn hts_file_type(fname: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
+#[doc = " Revised MAQ error model *"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct errmod_t {
@@ -1168,6 +1585,8 @@ extern "C" {
         q: *mut f32,
     ) -> ::std::os::raw::c_int;
 }
+#[doc = " Probabilistic banded glocal alignment             *"]
+#[doc = " See https://doi.org/10.1093/bioinformatics/btr076 *"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct probaln_par_t {
@@ -1176,6 +1595,29 @@ pub struct probaln_par_t {
     pub bw: ::std::os::raw::c_int,
 }
 extern "C" {
+    #[doc = " Perform probabilistic banded glocal alignment"]
+    #[doc = "** @param      ref     Reference sequence"]
+    #[doc = "@param      l_ref   Length of reference"]
+    #[doc = "@param      query   Query sequence"]
+    #[doc = "@param      l_query Length of query sequence"]
+    #[doc = "@param      iqual   Query base qualities"]
+    #[doc = "@param      c       Alignment parameters"]
+    #[doc = "@param[out] state   Output alignment"]
+    #[doc = "@param[out] q    Phred scaled posterior probability of state[i] being wrong"]
+    #[doc = "@return     Phred-scaled likelihood score, or INT_MIN on failure."]
+    #[doc = ""]
+    #[doc = "The reference and query sequences are coded using integers 0,1,2,3,4 for"]
+    #[doc = "bases A,C,G,T,N respectively (N here is for any ambiguity code)."]
+    #[doc = ""]
+    #[doc = "On output, state and q are arrays of length l_query. The higher 30"]
+    #[doc = "bits give the reference position the query base is matched to and the"]
+    #[doc = "lower two bits can be 0 (an alignment match) or 1 (an"]
+    #[doc = "insertion). q[i] gives the phred scaled posterior probability of"]
+    #[doc = "state[i] being wrong."]
+    #[doc = ""]
+    #[doc = "On failure, errno will be set to EINVAL if the values of l_ref or l_query"]
+    #[doc = "were invalid; or ENOMEM if a memory allocation failed."]
+    #[doc = "*/"]
     pub fn probaln_glocal(
         ref_: *const u8,
         l_ref: ::std::os::raw::c_int,
@@ -1187,15 +1629,30 @@ extern "C" {
         q: *mut u8,
     ) -> ::std::os::raw::c_int;
 }
+#[doc = " MD5 implementation *"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hts_md5_context {
     _unused: [u8; 0],
 }
 extern "C" {
+    #[doc = " @abstract   Intialises an MD5 context."]
+    #[doc = "  @discussion"]
+    #[doc = "    The expected use is to allocate an hts_md5_context using"]
+    #[doc = "    hts_md5_init().  This pointer is then passed into one or more calls"]
+    #[doc = "    of hts_md5_update() to compute successive internal portions of the"]
+    #[doc = "    MD5 sum, which can then be externalised as a full 16-byte MD5sum"]
+    #[doc = "    calculation by calling hts_md5_final().  This can then be turned"]
+    #[doc = "    into ASCII via hts_md5_hex()."]
+    #[doc = ""]
+    #[doc = "    To dealloate any resources created by hts_md5_init() call the"]
+    #[doc = "    hts_md5_destroy() function."]
+    #[doc = ""]
+    #[doc = "  @return     hts_md5_context pointer on success, NULL otherwise."]
     pub fn hts_md5_init() -> *mut hts_md5_context;
 }
 extern "C" {
+    #[doc = " @abstract Updates the context with the MD5 of the data."]
     pub fn hts_md5_update(
         ctx: *mut hts_md5_context,
         data: *const ::std::os::raw::c_void,
@@ -1203,29 +1660,78 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " @abstract Computes the final 128-bit MD5 hash from the given context"]
     pub fn hts_md5_final(digest: *mut ::std::os::raw::c_uchar, ctx: *mut hts_md5_context);
 }
 extern "C" {
+    #[doc = " @abstract Resets an md5_context to the initial state, as returned"]
+    #[doc = "            by hts_md5_init()."]
     pub fn hts_md5_reset(ctx: *mut hts_md5_context);
 }
 extern "C" {
+    #[doc = " @abstract Converts a 128-bit MD5 hash into a 33-byte nul-termninated"]
+    #[doc = "            hex string."]
     pub fn hts_md5_hex(hex: *mut ::std::os::raw::c_char, digest: *const ::std::os::raw::c_uchar);
 }
 extern "C" {
+    #[doc = " @abstract Deallocates any memory allocated by hts_md5_init."]
     pub fn hts_md5_destroy(ctx: *mut hts_md5_context);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct bam_hdr_t {
+pub struct sam_hrecs_t {
+    _unused: [u8; 0],
+}
+#[doc = " @typedef"]
+#[doc = "@abstract Structure for the alignment header."]
+#[doc = "@field n_targets   number of reference sequences"]
+#[doc = "@field l_text      length of the plain text in the header (may be zero if"]
+#[doc = "the header has been edited)"]
+#[doc = "@field target_len  lengths of the reference sequences"]
+#[doc = "@field target_name names of the reference sequences"]
+#[doc = "@field text        plain text (may be NULL if the header has been edited)"]
+#[doc = "@field sdict       header dictionary"]
+#[doc = "@field hrecs       pointer to the extended header struct (internal use only)"]
+#[doc = "@field ref_count   reference count"]
+#[doc = ""]
+#[doc = "@note The text and l_text fields are included for backwards compatibility."]
+#[doc = "These fields may be set to NULL and zero respectively as a side-effect"]
+#[doc = "of calling some header API functions.  New code that needs to access the"]
+#[doc = "header text should use the sam_hdr_str() and sam_hdr_length() functions"]
+#[doc = "instead of these fields."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct sam_hdr_t {
     pub n_targets: i32,
     pub ignore_sam_err: i32,
-    pub l_text: u32,
+    pub l_text: usize,
     pub target_len: *mut u32,
-    pub cigar_tab: *mut i8,
+    pub cigar_tab: *const i8,
     pub target_name: *mut *mut ::std::os::raw::c_char,
     pub text: *mut ::std::os::raw::c_char,
     pub sdict: *mut ::std::os::raw::c_void,
+    pub hrecs: *mut sam_hrecs_t,
+    pub ref_count: u32,
 }
+#[doc = " @typedef"]
+#[doc = " @abstract Old name for compatibility with existing code."]
+pub type bam_hdr_t = sam_hdr_t;
+extern "C" {
+    pub static mut bam_cigar_table: [i8; 256usize];
+}
+#[doc = " @typedef"]
+#[doc = "@abstract Structure for core alignment information."]
+#[doc = "@field  tid     chromosome ID, defined by sam_hdr_t"]
+#[doc = "@field  pos     0-based leftmost coordinate"]
+#[doc = "@field  bin     bin calculated by bam_reg2bin()"]
+#[doc = "@field  qual    mapping quality"]
+#[doc = "@field  l_qname length of the query name"]
+#[doc = "@field  flag    bitwise flag"]
+#[doc = "@field  l_extranul length of extra NULs between qname & cigar (for alignment)"]
+#[doc = "@field  n_cigar number of CIGAR operations"]
+#[doc = "@field  l_qseq  length of the query sequence (read)"]
+#[doc = "@field  mtid    chromosome ID of next read in template, defined by sam_hdr_t"]
+#[doc = "@field  mpos    0-based leftmost coordinate of next read in template"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct bam1_core_t {
@@ -1233,16 +1739,36 @@ pub struct bam1_core_t {
     pub pos: i32,
     pub bin: u16,
     pub qual: u8,
-    pub l_qname: u8,
-    pub flag: u16,
-    pub unused1: u8,
     pub l_extranul: u8,
+    pub flag: u16,
+    pub l_qname: u16,
     pub n_cigar: u32,
     pub l_qseq: i32,
     pub mtid: i32,
     pub mpos: i32,
     pub isize: i32,
 }
+#[doc = " @typedef"]
+#[doc = "@abstract Structure for one alignment."]
+#[doc = "@field  core       core information about the alignment"]
+#[doc = "@field  l_data     current length of bam1_t::data"]
+#[doc = "@field  m_data     maximum length of bam1_t::data"]
+#[doc = "@field  data       all variable-length data, concatenated; structure: qname-cigar-seq-qual-aux"]
+#[doc = ""]
+#[doc = "@discussion Notes:"]
+#[doc = ""]
+#[doc = "1. The data blob should be accessed using bam_get_qname, bam_get_cigar,"]
+#[doc = "bam_get_seq, bam_get_qual and bam_get_aux macros.  These returns pointers"]
+#[doc = "to the start of each type of data."]
+#[doc = "2. qname is terminated by one to four NULs, so that the following"]
+#[doc = "cigar data is 32-bit aligned; core.l_qname includes these trailing NULs,"]
+#[doc = "while core.l_extranul counts the excess NULs (so 0 <= l_extranul <= 3)."]
+#[doc = "3. Cigar data is encoded 4 bytes per CIGAR operation."]
+#[doc = "See the bam_cigar_* macros for manipulation."]
+#[doc = "4. seq is nibble-encoded according to bam_nt16_table."]
+#[doc = "See the bam_seqi macro for retrieving individual bases."]
+#[doc = "5. Per base qualilties are stored in the Phred scale with no +33 offset."]
+#[doc = "Ie as per the BAM specification and not the SAM ASCII printable method."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct bam1_t {
@@ -1253,69 +1779,703 @@ pub struct bam1_t {
     pub id: u64,
 }
 extern "C" {
-    pub fn bam_hdr_init() -> *mut bam_hdr_t;
+    #[doc = " Generates a new unpopulated header structure."]
+    #[doc = "*!"]
+    #[doc = "*"]
+    #[doc = "* @return  A valid pointer to new header on success, NULL on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_init() -> *mut sam_hdr_t;
 }
 extern "C" {
-    pub fn bam_hdr_read(fp: *mut BGZF) -> *mut bam_hdr_t;
+    #[doc = " Read the header from a BAM compressed file."]
+    #[doc = "*!"]
+    #[doc = "* @param fp  File pointer"]
+    #[doc = "* @return    A valid pointer to new header on success, NULL on failure"]
+    #[doc = "*"]
+    #[doc = "* This function only works with BAM files.  It is usually better to use"]
+    #[doc = "* sam_hdr_read(), which works on SAM, BAM and CRAM files."]
+    #[doc = "*/"]
+    pub fn bam_hdr_read(fp: *mut BGZF) -> *mut sam_hdr_t;
 }
 extern "C" {
-    pub fn bam_hdr_write(fp: *mut BGZF, h: *const bam_hdr_t) -> ::std::os::raw::c_int;
+    #[doc = " Writes the header to a BAM file."]
+    #[doc = "*!"]
+    #[doc = "* @param fp  File pointer"]
+    #[doc = "* @param h   Header pointer"]
+    #[doc = "* @return    0 on success, -1 on failure"]
+    #[doc = "*"]
+    #[doc = "* This function only works with BAM files.  Use sam_hdr_write() to"]
+    #[doc = "* write in any of the SAM, BAM or CRAM formats."]
+    #[doc = "*/"]
+    pub fn bam_hdr_write(fp: *mut BGZF, h: *const sam_hdr_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn bam_hdr_destroy(h: *mut bam_hdr_t);
+    #[doc = " Frees the resources associated with a header."]
+    pub fn sam_hdr_destroy(h: *mut sam_hdr_t);
 }
 extern "C" {
-    pub fn bam_name2id(
-        h: *mut bam_hdr_t,
+    #[doc = " Duplicate a header structure."]
+    #[doc = "*!"]
+    #[doc = "* @return  A valid pointer to new header on success, NULL on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_dup(h0: *const sam_hdr_t) -> *mut sam_hdr_t;
+}
+pub type samFile = htsFile;
+extern "C" {
+    #[doc = " Create a header from existing text."]
+    #[doc = "*!"]
+    #[doc = "* @param l_text    Length of text"]
+    #[doc = "* @param text      Header text"]
+    #[doc = "* @return A populated sam_hdr_t structure on success; NULL on failure."]
+    #[doc = "* @note The text field of the returned header will be NULL, and the l_text"]
+    #[doc = "* field will be zero."]
+    #[doc = "*/"]
+    pub fn sam_hdr_parse(l_text: usize, text: *const ::std::os::raw::c_char) -> *mut sam_hdr_t;
+}
+extern "C" {
+    #[doc = " Read a header from a SAM, BAM or CRAM file."]
+    #[doc = "*!"]
+    #[doc = "* @param fp    Pointer to a SAM, BAM or CRAM file handle"]
+    #[doc = "* @return  A populated sam_hdr_t struct on success; NULL on failure."]
+    #[doc = "*/"]
+    pub fn sam_hdr_read(fp: *mut samFile) -> *mut sam_hdr_t;
+}
+extern "C" {
+    #[doc = " Write a header to a SAM, BAM or CRAM file."]
+    #[doc = "*!"]
+    #[doc = "* @param fp    SAM, BAM or CRAM file header"]
+    #[doc = "* @param h     Header structure to write"]
+    #[doc = "* @return  0 on success; -1 on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_write(fp: *mut samFile, h: *const sam_hdr_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Returns the current length of the header text."]
+    #[doc = "*!"]
+    #[doc = "* @return  >= 0 on success, SIZE_MAX on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_length(h: *mut sam_hdr_t) -> usize;
+}
+extern "C" {
+    #[doc = " Returns the text representation of the header."]
+    #[doc = "*!"]
+    #[doc = "* @return  valid char pointer on success, NULL on failure"]
+    #[doc = "*"]
+    #[doc = "* The returned string is part of the header structure.  It will remain"]
+    #[doc = "* valid until a call to a header API function causes the string to be"]
+    #[doc = "* invalidated, or the header is destroyed."]
+    #[doc = "*"]
+    #[doc = "* The caller should not attempt to free or realloc this pointer."]
+    #[doc = "*/"]
+    pub fn sam_hdr_str(h: *mut sam_hdr_t) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Returns the number of references in the header."]
+    #[doc = "*!"]
+    #[doc = "* @return  >= 0 on success, -1 on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_nref(h: *const sam_hdr_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Add formatted lines to an existing header."]
+    #[doc = "*!"]
+    #[doc = "* @param lines  Full SAM header record, eg \"@SQ\\tSN:foo\\tLN:100\", with"]
+    #[doc = "*               optional new-line. If it contains more than 1 line then"]
+    #[doc = "*               multiple lines will be added in order"]
+    #[doc = "* @param len    The maximum length of lines (if an early NUL is not"]
+    #[doc = "*               encountered). len may be 0 if unknown, in which case"]
+    #[doc = "*               lines must be NUL-terminated"]
+    #[doc = "* @return       0 on success, -1 on failure"]
+    #[doc = "*"]
+    #[doc = "* The lines will be appended to the end of the existing header"]
+    #[doc = "* (apart from HD, which always comes first)."]
+    #[doc = "*/"]
+    pub fn sam_hdr_add_lines(
+        h: *mut sam_hdr_t,
+        lines: *const ::std::os::raw::c_char,
+        len: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Adds a single line to an existing header."]
+    #[doc = "*!"]
+    #[doc = "* Specify type and one or more key,value pairs, ending with the NULL key."]
+    #[doc = "* Eg. sam_hdr_add_line(h, \"SQ\", \"ID\", \"foo\", \"LN\", \"100\", NULL)."]
+    #[doc = "*"]
+    #[doc = "* @param type  Type of the added line. Eg. \"SQ\""]
+    #[doc = "* @return      0 on success, -1 on failure"]
+    #[doc = "*"]
+    #[doc = "* The new line will be added immediately after any others of the same"]
+    #[doc = "* type, or at the end of the existing header if no lines of the"]
+    #[doc = "* given type currently exist.  The exception is HD lines, which always"]
+    #[doc = "* come first.  If an HD line already exists, it will be replaced."]
+    #[doc = "*/"]
+    pub fn sam_hdr_add_line(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ...
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Returns a complete line of formatted text for a given type and ID."]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the searched line. Eg. \"SQ\""]
+    #[doc = "* @param ID_key    Tag key defining the line. Eg. \"SN\""]
+    #[doc = "* @param ID_value  Tag value associated with the key above. Eg. \"ref1\""]
+    #[doc = "* @param ks        kstring to hold the result"]
+    #[doc = "* @return          0 on success;"]
+    #[doc = "*                 -1 if no matching line is found"]
+    #[doc = "*                 -2 on other failures"]
+    #[doc = "*"]
+    #[doc = "* Puts a complete line of formatted text for a specific header type/ID"]
+    #[doc = "* combination into @p ks. If ID_key is NULL then it returns the first line of"]
+    #[doc = "* the specified type."]
+    #[doc = "*"]
+    #[doc = "* Any existing content in @p ks will be overwritten."]
+    #[doc = "*/"]
+    pub fn sam_hdr_find_line_id(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ID_key: *const ::std::os::raw::c_char,
+        ID_val: *const ::std::os::raw::c_char,
+        ks: *mut kstring_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Returns a complete line of formatted text for a given type and index."]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the searched line. Eg. \"SQ\""]
+    #[doc = "* @param position  Index in lines of this type (zero-based)"]
+    #[doc = "* @param ks        kstring to hold the result"]
+    #[doc = "* @return          0 on success;"]
+    #[doc = "*                 -1 if no matching line is found"]
+    #[doc = "*                 -2 on other failures"]
+    #[doc = "*"]
+    #[doc = "* Puts a complete line of formatted text for a specific line into @p ks."]
+    #[doc = "* The header line is selected using the @p type and @p position parameters."]
+    #[doc = "*"]
+    #[doc = "* Any existing content in @p ks will be overwritten."]
+    #[doc = "*/"]
+    pub fn sam_hdr_find_line_pos(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        pos: ::std::os::raw::c_int,
+        ks: *mut kstring_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove a line with given type / id from a header"]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the searched line. Eg. \"SQ\""]
+    #[doc = "* @param ID_key    Tag key defining the line. Eg. \"SN\""]
+    #[doc = "* @param ID_value  Tag value associated with the key above. Eg. \"ref1\""]
+    #[doc = "* @return          0 on success, -1 on error"]
+    #[doc = "*"]
+    #[doc = "* Remove a line from the header by specifying a tag:value that uniquely"]
+    #[doc = "* identifies the line, i.e. the @SQ line containing \"SN:ref1\"."]
+    #[doc = "*"]
+    #[doc = "* \\@SQ line is uniquely identified by the SN tag."]
+    #[doc = "* \\@RG line is uniquely identified by the ID tag."]
+    #[doc = "* \\@PG line is uniquely identified by the ID tag."]
+    #[doc = "* Eg. sam_hdr_remove_line_id(h, \"SQ\", \"SN\", \"ref1\")"]
+    #[doc = "*"]
+    #[doc = "* If no key:value pair is specified, the type MUST be followed by a NULL argument and"]
+    #[doc = "* the first line of the type will be removed, if any."]
+    #[doc = "* Eg. sam_hdr_remove_line_id(h, \"SQ\", NULL, NULL)"]
+    #[doc = "*"]
+    #[doc = "* @note Removing \\@PG lines is currently unsupported."]
+    #[doc = "*/"]
+    pub fn sam_hdr_remove_line_id(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ID_key: *const ::std::os::raw::c_char,
+        ID_value: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove nth line of a given type from a header"]
+    #[doc = "*!"]
+    #[doc = "* @param type     Type of the searched line. Eg. \"SQ\""]
+    #[doc = "* @param position Index in lines of this type (zero-based). E.g. 3"]
+    #[doc = "* @return         0 on success, -1 on error"]
+    #[doc = "*"]
+    #[doc = "* Remove a line from the header by specifying the position in the type"]
+    #[doc = "* group, i.e. 3rd @SQ line."]
+    #[doc = "*/"]
+    pub fn sam_hdr_remove_line_pos(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        position: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Add or update tag key,value pairs in a header line."]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the searched line. Eg. \"SQ\""]
+    #[doc = "* @param ID_key    Tag key defining the line. Eg. \"SN\""]
+    #[doc = "* @param ID_value  Tag value associated with the key above. Eg. \"ref1\""]
+    #[doc = "* @return          0 on success, -1 on error"]
+    #[doc = "*"]
+    #[doc = "* Adds or updates tag key,value pairs in a header line."]
+    #[doc = "* Eg. for adding M5 tags to @SQ lines or updating sort order for the"]
+    #[doc = "* @HD line."]
+    #[doc = "*"]
+    #[doc = "* Specify multiple key,value pairs ending in NULL. Eg."]
+    #[doc = "* sam_hdr_update_line(h, \"RG\", \"ID\", \"rg1\", \"DS\", \"description\", \"PG\", \"samtools\", NULL)"]
+    #[doc = "*"]
+    #[doc = "* Attempting to update the record name (i.e. @SQ SN or @RG ID) will"]
+    #[doc = "* work as long as the new name is not already in use, however doing this"]
+    #[doc = "* on a file opened for reading may produce unexpected results."]
+    #[doc = "*"]
+    #[doc = "* Renaming an @RG record in this way will only change the header.  Alignment"]
+    #[doc = "* records written later will not be updated automatically even if they"]
+    #[doc = "* reference the old read group name."]
+    #[doc = "*"]
+    #[doc = "* Attempting to change an @PG ID tag is not permitted."]
+    #[doc = "*/"]
+    pub fn sam_hdr_update_line(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ID_key: *const ::std::os::raw::c_char,
+        ID_value: *const ::std::os::raw::c_char,
+        ...
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove all lines of a given type from a header, except the one matching an ID"]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the searched line. Eg. \"SQ\""]
+    #[doc = "* @param ID_key    Tag key defining the line. Eg. \"SN\""]
+    #[doc = "* @param ID_value  Tag value associated with the key above. Eg. \"ref1\""]
+    #[doc = "* @return          0 on success, -1 on failure"]
+    #[doc = "*"]
+    #[doc = "* Remove all lines of type <type> from the header, except the one"]
+    #[doc = "* specified by tag:value, i.e. the @SQ line containing \"SN:ref1\"."]
+    #[doc = "*"]
+    #[doc = "* If no line matches the key:value ID, all lines of the given type are removed."]
+    #[doc = "* To remove all lines of a given type, use NULL for both ID_key and ID_value."]
+    #[doc = "*/"]
+    pub fn sam_hdr_remove_except(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ID_key: *const ::std::os::raw::c_char,
+        ID_value: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove header lines of a given type, except those in a given ID set"]
+    #[doc = "*!"]
+    #[doc = "* @param type  Type of the searched line. Eg. \"RG\""]
+    #[doc = "* @param id    Tag key defining the line. Eg. \"ID\""]
+    #[doc = "* @param rh    Hash set initialised by the caller with the values to be kept."]
+    #[doc = "*              See description for how to create this."]
+    #[doc = "* @return      0 on success, -1 on failure"]
+    #[doc = "*"]
+    #[doc = "* Remove all lines of type <type> from the header, except the one"]
+    #[doc = "* specified in the hash set @p rh."]
+    #[doc = "* Declaration of @rh is done using KHASH_SET_INIT_STR macro. Eg."]
+    #[doc = "* @code{.c}"]
+    #[doc = "*              KHASH_SET_INIT_STR(remove)"]
+    #[doc = "*              typedef khash_t(remove) *remhash_t;"]
+    #[doc = "*"]
+    #[doc = "*              void your_method() {"]
+    #[doc = "*                  samFile *sf = sam_open(\"alignment.bam\", \"r\");"]
+    #[doc = "*                  sam_hdr_t *h = sam_hdr_read(sf);"]
+    #[doc = "*                  remhash_t rh = kh_init(remove);"]
+    #[doc = "*                  int ret = 0;"]
+    #[doc = "*                  kh_put(remove, rh, strdup(\"chr2\"), &ret);"]
+    #[doc = "*                  kh_put(remove, rh, strdup(\"chr3\"), &ret);"]
+    #[doc = "*                  if (sam_hdr_remove_lines(h, \"SQ\", \"SN\", rh) == -1)"]
+    #[doc = "*                      fprintf(stderr, \"Error removing lines\\n\");"]
+    #[doc = "*                  khint_t k;"]
+    #[doc = "*                  for (k = 0; k < kh_end(rh); ++k)"]
+    #[doc = "*                     if (kh_exist(rh, k)) free((char*)kh_key(rh, k));"]
+    #[doc = "*                  kh_destroy(remove, rh);"]
+    #[doc = "*                  sam_hdr_destroy(h);"]
+    #[doc = "*                  sam_close(sf);"]
+    #[doc = "*              }"]
+    #[doc = "* @endcode"]
+    #[doc = "*"]
+    #[doc = "*/"]
+    pub fn sam_hdr_remove_lines(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        id: *const ::std::os::raw::c_char,
+        rh: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Count the number of lines for a given header type"]
+    #[doc = "*!"]
+    #[doc = "* @param h     BAM header"]
+    #[doc = "* @param type  Header type to count. Eg. \"RG\""]
+    #[doc = "* @return  Number of lines of this type on success; -1 on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_count_lines(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Index of the line for the types that have dedicated look-up tables (SQ, RG, PG)"]
+    #[doc = "*!"]
+    #[doc = "* @param h     BAM header"]
+    #[doc = "* @param type  Type of the searched line. Eg. \"RG\""]
+    #[doc = "* @param key   The value of the identifying key. Eg. \"rg1\""]
+    #[doc = "* @return  0-based index on success; -1 if line does not exist; -2 on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_line_index(
+        bh: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        key: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Id key of the line for the types that have dedicated look-up tables (SQ, RG, PG)"]
+    #[doc = "*!"]
+    #[doc = "* @param h     BAM header"]
+    #[doc = "* @param type  Type of the searched line. Eg. \"RG\""]
+    #[doc = "* @param pos   Zero-based index inside the type group. Eg. 2 (for the third RG line)"]
+    #[doc = "* @return  Valid key string on success; NULL on failure"]
+    #[doc = "*/"]
+    pub fn sam_hdr_line_name(
+        bh: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        pos: ::std::os::raw::c_int,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Return the value associated with a key for a header line identified by ID_key:ID_val"]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the line to which the tag belongs. Eg. \"SQ\""]
+    #[doc = "* @param ID_key    Tag key defining the line. Eg. \"SN\". Can be NULL, if looking for the first line."]
+    #[doc = "* @param ID_value  Tag value associated with the key above. Eg. \"ref1\". Can be NULL, if ID_key is NULL."]
+    #[doc = "* @param key       Key of the searched tag. Eg. \"LN\""]
+    #[doc = "* @param ks        kstring where the value will be written"]
+    #[doc = "* @return          0 on success"]
+    #[doc = "*                 -1 if the requested tag does not exist"]
+    #[doc = "*                 -2 on other errors"]
+    #[doc = "*"]
+    #[doc = "* Looks for a specific key in a single SAM header line and writes the"]
+    #[doc = "* associated value into @p ks.  The header line is selected using the ID_key"]
+    #[doc = "* and ID_value parameters.  Any pre-existing content in @p ks will be"]
+    #[doc = "* overwritten."]
+    #[doc = "*/"]
+    pub fn sam_hdr_find_tag_id(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ID_key: *const ::std::os::raw::c_char,
+        ID_value: *const ::std::os::raw::c_char,
+        key: *const ::std::os::raw::c_char,
+        ks: *mut kstring_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Return the value associated with a key for a header line identified by position"]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the line to which the tag belongs. Eg. \"SQ\""]
+    #[doc = "* @param position  Index in lines of this type (zero-based). E.g. 3"]
+    #[doc = "* @param key       Key of the searched tag. Eg. \"LN\""]
+    #[doc = "* @param ks        kstring where the value will be written"]
+    #[doc = "* @return          0 on success"]
+    #[doc = "*                 -1 if the requested tag does not exist"]
+    #[doc = "*                 -2 on other errors"]
+    #[doc = "*"]
+    #[doc = "* Looks for a specific key in a single SAM header line and writes the"]
+    #[doc = "* associated value into @p ks.  The header line is selected using the @p type"]
+    #[doc = "* and @p position parameters.  Any pre-existing content in @p ks will be"]
+    #[doc = "* overwritten."]
+    #[doc = "*/"]
+    pub fn sam_hdr_find_tag_pos(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        pos: ::std::os::raw::c_int,
+        key: *const ::std::os::raw::c_char,
+        ks: *mut kstring_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove the key from the line identified by type, ID_key and ID_value."]
+    #[doc = "*!"]
+    #[doc = "* @param type      Type of the line to which the tag belongs. Eg. \"SQ\""]
+    #[doc = "* @param ID_key    Tag key defining the line. Eg. \"SN\""]
+    #[doc = "* @param ID_value  Tag value associated with the key above. Eg. \"ref1\""]
+    #[doc = "* @param key       Key of the targeted tag. Eg. \"M5\""]
+    #[doc = "* @return          1 if the key was removed; 0 if it was not present; -1 on error"]
+    #[doc = "*/"]
+    pub fn sam_hdr_remove_tag_id(
+        h: *mut sam_hdr_t,
+        type_: *const ::std::os::raw::c_char,
+        ID_key: *const ::std::os::raw::c_char,
+        ID_value: *const ::std::os::raw::c_char,
+        key: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Get the target id for a given reference sequence name"]
+    #[doc = "*!"]
+    #[doc = "* @param ref  Reference name"]
+    #[doc = "* @return     Positive value on success,"]
+    #[doc = "*             -1 if unknown reference,"]
+    #[doc = "*             -2 if the header could not be parsed"]
+    #[doc = "*"]
+    #[doc = "* Looks up a reference sequence by name in the reference hash table"]
+    #[doc = "* and returns the numerical target id."]
+    #[doc = "*/"]
+    pub fn sam_hdr_name2tid(
+        h: *mut sam_hdr_t,
         ref_: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn bam_hdr_dup(h0: *const bam_hdr_t) -> *mut bam_hdr_t;
+    #[doc = " Get the reference sequence name from a target index"]
+    #[doc = "*!"]
+    #[doc = "* @param tid  Target index"]
+    #[doc = "* @return     Valid reference name on success, NULL on failure"]
+    #[doc = "*"]
+    #[doc = "* Fetch the reference sequence name from the target name array,"]
+    #[doc = "* using the numerical target id."]
+    #[doc = "*/"]
+    pub fn sam_hdr_tid2name(
+        h: *const sam_hdr_t,
+        tid: ::std::os::raw::c_int,
+    ) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = " Get the reference sequence length from a target index"]
+    #[doc = "*!"]
+    #[doc = "* @param tid  Target index"]
+    #[doc = "* @return     Strictly positive value on success, 0 on failure"]
+    #[doc = "*"]
+    #[doc = "* Fetch the reference sequence length from the target length array,"]
+    #[doc = "* using the numerical target id."]
+    #[doc = "*/"]
+    pub fn sam_hdr_tid2len(h: *const sam_hdr_t, tid: ::std::os::raw::c_int) -> u32;
+}
+extern "C" {
+    #[doc = " Generate a unique \\@PG ID: value"]
+    #[doc = "*!"]
+    #[doc = "* @param name  Name of the program. Eg. samtools"]
+    #[doc = "* @return      Valid ID on success, NULL on failure"]
+    #[doc = "*"]
+    #[doc = "* Returns a unique ID from a base name.  The string returned will remain"]
+    #[doc = "* valid until the next call to this function, or the header is destroyed."]
+    #[doc = "* The caller should not attempt to free() or realloc() it."]
+    #[doc = "*/"]
+    pub fn sam_hdr_pg_id(
+        h: *mut sam_hdr_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Add an \\@PG line."]
+    #[doc = "*!"]
+    #[doc = "* @param name  Name of the program. Eg. samtools"]
+    #[doc = "* @return      0 on success, -1 on failure"]
+    #[doc = "*"]
+    #[doc = "* If we wish complete control over this use sam_hdr_add_line() directly. This"]
+    #[doc = "* function uses that, but attempts to do a lot of tedious house work for"]
+    #[doc = "* you too."]
+    #[doc = "*"]
+    #[doc = "* - It will generate a suitable ID if the supplied one clashes."]
+    #[doc = "* - It will generate multiple \\@PG records if we have multiple PG chains."]
+    #[doc = "*"]
+    #[doc = "* Call it as per sam_hdr_add_line() with a series of key,value pairs ending"]
+    #[doc = "* in NULL."]
+    #[doc = "*/"]
+    pub fn sam_hdr_add_pg(
+        h: *mut sam_hdr_t,
+        name: *const ::std::os::raw::c_char,
+        ...
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " A function to help with construction of CL tags in @PG records."]
+    #[doc = " Takes an argc, argv pair and returns a single space-separated string."]
+    #[doc = " This string should be deallocated by the calling function."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = " Returns malloced char * on success;"]
+    #[doc = "         NULL on failure"]
+    pub fn stringify_argv(
+        argc: ::std::os::raw::c_int,
+        argv: *mut *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Increments the reference count on a header"]
+    #[doc = "*!"]
+    #[doc = "* This permits multiple files to share the same header, all calling"]
+    #[doc = "* sam_hdr_destroy when done, without causing errors for other open files."]
+    #[doc = "*/"]
+    pub fn sam_hdr_incr_ref(h: *mut sam_hdr_t);
+}
+extern "C" {
+    #[doc = " Create a new bam1_t alignment structure"]
+    #[doc = "**"]
+    #[doc = "@return An empty bam1_t structure on success, NULL on failure"]
+    #[doc = "*/"]
     pub fn bam_init1() -> *mut bam1_t;
 }
 extern "C" {
+    #[doc = " Destory a bam1_t structure"]
+    #[doc = "**"]
+    #[doc = "@param b  structure to destroy"]
+    #[doc = ""]
+    #[doc = "Does nothing if @p b is NULL.  If not, all memory associated with @p b"]
+    #[doc = "will be freed, along with the structure itself.  @p b should not be"]
+    #[doc = "accessed after calling this function."]
+    #[doc = "*/"]
     pub fn bam_destroy1(b: *mut bam1_t);
 }
 extern "C" {
+    #[doc = " Read a BAM format alignment record"]
+    #[doc = "**"]
+    #[doc = "@param fp   BGZF file being read"]
+    #[doc = "@param b    Destination for the alignment data"]
+    #[doc = "@return number of bytes read on success"]
+    #[doc = "-1 at end of file"]
+    #[doc = "< -1 on failure"]
+    #[doc = ""]
+    #[doc = "This function can only read BAM format files.  Most code should use"]
+    #[doc = "sam_read1() instead, which can be used with BAM, SAM and CRAM formats."]
+    #[doc = "*/"]
     pub fn bam_read1(fp: *mut BGZF, b: *mut bam1_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Write a BAM format alignment record"]
+    #[doc = "**"]
+    #[doc = "@param fp  BGZF file being written"]
+    #[doc = "@param b   Alignment record to write"]
+    #[doc = "@return number of bytes written on success"]
+    #[doc = "-1 on error"]
+    #[doc = ""]
+    #[doc = "This function can only write BAM format files.  Most code should use"]
+    #[doc = "sam_write1() instead, which can be used with BAM, SAM and CRAM formats."]
+    #[doc = "*/"]
     pub fn bam_write1(fp: *mut BGZF, b: *const bam1_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Copy alignment record data"]
+    #[doc = "**"]
+    #[doc = "@param bdst  Destination alignment record"]
+    #[doc = "@param bsrc  Source alignment record"]
+    #[doc = "@return bdst on success; NULL on failure"]
+    #[doc = "*/"]
     pub fn bam_copy1(bdst: *mut bam1_t, bsrc: *const bam1_t) -> *mut bam1_t;
 }
 extern "C" {
+    #[doc = " Create a duplicate alignment record"]
+    #[doc = "**"]
+    #[doc = "@param bsrc  Source alignment record"]
+    #[doc = "@return Pointer to a new alignment record on success; NULL on failure"]
+    #[doc = "*/"]
     pub fn bam_dup1(bsrc: *const bam1_t) -> *mut bam1_t;
 }
 extern "C" {
+    #[doc = " Calculate query length from CIGAR data"]
+    #[doc = "**"]
+    #[doc = "@param n_cigar   Number of items in @p cigar"]
+    #[doc = "@param cigar     CIGAR data"]
+    #[doc = "@return Query length"]
+    #[doc = ""]
+    #[doc = "CIGAR data is stored as in the BAM format, i.e. (op_len << 4) | op"]
+    #[doc = "where op_len is the length in bases and op is a value between 0 and 8"]
+    #[doc = "representing one of the operations \"MIDNSHP=X\" (M = 0; X = 8)"]
+    #[doc = ""]
+    #[doc = "This function returns the sum of the lengths of the M, I, S, = and X"]
+    #[doc = "operations in @p cigar (these are the operations that \"consume\" query"]
+    #[doc = "bases).  All other operations (including invalid ones) are ignored."]
+    #[doc = "*/"]
     pub fn bam_cigar2qlen(
         n_cigar: ::std::os::raw::c_int,
         cigar: *const u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Calculate reference length from CIGAR data"]
+    #[doc = "**"]
+    #[doc = "@param n_cigar   Number of items in @p cigar"]
+    #[doc = "@param cigar     CIGAR data"]
+    #[doc = "@return Reference length"]
+    #[doc = ""]
+    #[doc = "CIGAR data is stored as in the BAM format, i.e. (op_len << 4) | op"]
+    #[doc = "where op_len is the length in bases and op is a value between 0 and 8"]
+    #[doc = "representing one of the operations \"MIDNSHP=X\" (M = 0; X = 8)"]
+    #[doc = ""]
+    #[doc = "This function returns the sum of the lengths of the M, D, N, = and X"]
+    #[doc = "operations in @p cigar (these are the operations that \"consume\" reference"]
+    #[doc = "bases).  All other operations (including invalid ones) are ignored."]
+    #[doc = "*/"]
     pub fn bam_cigar2rlen(
         n_cigar: ::std::os::raw::c_int,
         cigar: *const u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = "@abstract Calculate the rightmost base position of an alignment on the"]
+    #[doc = "reference genome."]
+    #[doc = ""]
+    #[doc = "@param  b  pointer to an alignment"]
+    #[doc = "@return    the coordinate of the first base after the alignment, 0-based"]
+    #[doc = ""]
+    #[doc = "@discussion For a mapped read, this is just b->core.pos + bam_cigar2rlen."]
+    #[doc = "For an unmapped read (either according to its flags or if it has no cigar"]
+    #[doc = "string), we return b->core.pos + 1 by convention."]
     pub fn bam_endpos(b: *const bam1_t) -> i32;
 }
 extern "C" {
     pub fn bam_str2flag(str: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " returns negative value on error"]
     pub fn bam_flag2str(flag: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = " Initialise fp->idx for the current format type for SAM, BAM and CRAM types ."]
+    #[doc = "** @param fp        File handle for the data file being written."]
+    #[doc = "@param h         Bam header structured (needed for BAI and CSI)."]
+    #[doc = "@param min_shift 0 for BAI, or larger for CSI (CSI defaults to 14)."]
+    #[doc = "@param fnidx     Filename to write index to.  This pointer must remain valid"]
+    #[doc = "until after sam_idx_save is called."]
+    #[doc = "@return          0 on success, <0 on failure."]
+    #[doc = ""]
+    #[doc = "@note This must be called after the header has been written, but before"]
+    #[doc = "any other data."]
+    #[doc = "*/"]
+    pub fn sam_idx_init(
+        fp: *mut htsFile,
+        h: *mut sam_hdr_t,
+        min_shift: ::std::os::raw::c_int,
+        fnidx: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Writes the index initialised with sam_idx_init to disk."]
+    #[doc = "** @param fp        File handle for the data file being written."]
+    #[doc = "@return          0 on success, <0 on filaure."]
+    #[doc = "*/"]
+    pub fn sam_idx_save(fp: *mut htsFile) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Load a BAM (.csi or .bai) or CRAM (.crai) index file"]
+    #[doc = "** @param fp  File handle of the data file whose index is being opened"]
+    #[doc = "@param fn  BAM/CRAM/etc filename to search alongside for the index file"]
+    #[doc = "@return  The index, or NULL if an error occurred."]
+    #[doc = ""]
+    #[doc = "Equivalent to sam_index_load3(fp, fn, NULL, HTS_IDX_SAVE_REMOTE);"]
+    #[doc = "*/"]
     pub fn sam_index_load(fp: *mut htsFile, fn_: *const ::std::os::raw::c_char) -> *mut hts_idx_t;
 }
 extern "C" {
+    #[doc = " Load a specific BAM (.csi or .bai) or CRAM (.crai) index file"]
+    #[doc = "** @param fp     File handle of the data file whose index is being opened"]
+    #[doc = "@param fn     BAM/CRAM/etc data file filename"]
+    #[doc = "@param fnidx  Index filename, or NULL to search alongside @a fn"]
+    #[doc = "@return  The index, or NULL if an error occurred."]
+    #[doc = ""]
+    #[doc = "Equivalent to sam_index_load3(fp, fn, fnidx, HTS_IDX_SAVE_REMOTE);"]
+    #[doc = "*/"]
     pub fn sam_index_load2(
         fp: *mut htsFile,
         fn_: *const ::std::os::raw::c_char,
@@ -1323,12 +2483,49 @@ extern "C" {
     ) -> *mut hts_idx_t;
 }
 extern "C" {
+    #[doc = " Load or stream a BAM (.csi or .bai) or CRAM (.crai) index file"]
+    #[doc = "** @param fp     File handle of the data file whose index is being opened"]
+    #[doc = "@param fn     BAM/CRAM/etc data file filename"]
+    #[doc = "@param fnidx  Index filename, or NULL to search alongside @a fn"]
+    #[doc = "@param flags  Flags to alter behaviour (see description)"]
+    #[doc = "@return  The index, or NULL if an error occurred."]
+    #[doc = ""]
+    #[doc = "The @p flags parameter can be set to a combination of the following values:"]
+    #[doc = ""]
+    #[doc = "HTS_IDX_SAVE_REMOTE   Save a local copy of any remote indexes"]
+    #[doc = "HTS_IDX_SILENT_FAIL   Fail silently if the index is not present"]
+    #[doc = ""]
+    #[doc = "Note that HTS_IDX_SAVE_REMOTE has no effect for remote CRAM indexes.  They"]
+    #[doc = "are always downloaded and never cached locally."]
+    #[doc = "*/"]
+    pub fn sam_index_load3(
+        fp: *mut htsFile,
+        fn_: *const ::std::os::raw::c_char,
+        fnidx: *const ::std::os::raw::c_char,
+        flags: ::std::os::raw::c_int,
+    ) -> *mut hts_idx_t;
+}
+extern "C" {
+    #[doc = " Generate and save an index file"]
+    #[doc = "** @param fn        Input BAM/etc filename, to which .csi/etc will be added"]
+    #[doc = "@param min_shift Positive to generate CSI, or 0 to generate BAI"]
+    #[doc = "@return  0 if successful, or negative if an error occurred (usually -1; or"]
+    #[doc = "-2: opening fn failed; -3: format not indexable; -4:"]
+    #[doc = "failed to create and/or save the index)"]
+    #[doc = "*/"]
     pub fn sam_index_build(
         fn_: *const ::std::os::raw::c_char,
         min_shift: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Generate and save an index to a specific file"]
+    #[doc = "** @param fn        Input BAM/CRAM/etc filename"]
+    #[doc = "@param fnidx     Output filename, or NULL to add .bai/.csi/etc to @a fn"]
+    #[doc = "@param min_shift Positive to generate CSI, or 0 to generate BAI"]
+    #[doc = "@return  0 if successful, or negative if an error occurred (see"]
+    #[doc = "sam_index_build for error codes)"]
+    #[doc = "*/"]
     pub fn sam_index_build2(
         fn_: *const ::std::os::raw::c_char,
         fnidx: *const ::std::os::raw::c_char,
@@ -1336,6 +2533,14 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Generate and save an index to a specific file"]
+    #[doc = "** @param fn        Input BAM/CRAM/etc filename"]
+    #[doc = "@param fnidx     Output filename, or NULL to add .bai/.csi/etc to @a fn"]
+    #[doc = "@param min_shift Positive to generate CSI, or 0 to generate BAI"]
+    #[doc = "@param nthreads  Number of threads to use when building the index"]
+    #[doc = "@return  0 if successful, or negative if an error occurred (see"]
+    #[doc = "sam_index_build for error codes)"]
+    #[doc = "*/"]
     pub fn sam_index_build3(
         fn_: *const ::std::os::raw::c_char,
         fnidx: *const ::std::os::raw::c_char,
@@ -1344,6 +2549,23 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Create a BAM/CRAM iterator"]
+    #[doc = "** @param idx     Index"]
+    #[doc = "@param tid     Target id"]
+    #[doc = "@param beg     Start position in target"]
+    #[doc = "@param end     End position in target"]
+    #[doc = "@return An iterator on success; NULL on failure"]
+    #[doc = ""]
+    #[doc = "The following special values (defined in htslib/hts.h)can be used for @p tid."]
+    #[doc = "When using one of these values, @p beg and @p end are ignored."]
+    #[doc = ""]
+    #[doc = "HTS_IDX_NOCOOR iterates over unmapped reads sorted at the end of the file"]
+    #[doc = "HTS_IDX_START  iterates over the entire file"]
+    #[doc = "HTS_IDX_REST   iterates from the current position to the end of the file"]
+    #[doc = "HTS_IDX_NONE   always returns \"no more alignment records\""]
+    #[doc = ""]
+    #[doc = "When using HTS_IDX_REST or HTS_IDX_NONE, NULL can be passed in to @p idx."]
+    #[doc = "*/"]
     pub fn sam_itr_queryi(
         idx: *const hts_idx_t,
         tid: ::std::os::raw::c_int,
@@ -1352,19 +2574,97 @@ extern "C" {
     ) -> *mut hts_itr_t;
 }
 extern "C" {
+    #[doc = " Create a SAM/BAM/CRAM iterator"]
+    #[doc = "** @param idx     Index"]
+    #[doc = "@param hdr     Header"]
+    #[doc = "@param region  Region specification"]
+    #[doc = "@return An iterator on success; NULL on failure"]
+    #[doc = ""]
+    #[doc = "Regions are parsed by hts_parse_reg(), and take one of the following forms:"]
+    #[doc = ""]
+    #[doc = "region          | Outputs"]
+    #[doc = "--------------- | -------------"]
+    #[doc = "REF             | All reads with RNAME REF"]
+    #[doc = "REF:            | All reads with RNAME REF"]
+    #[doc = "REF:START       | Reads with RNAME REF overlapping START to end of REF"]
+    #[doc = "REF:-END        | Reads with RNAME REF overlapping start of REF to END"]
+    #[doc = "REF:START-END   | Reads with RNAME REF overlapping START to END"]
+    #[doc = ".               | All reads from the start of the file"]
+    #[doc = "*               | Unmapped reads at the end of the file (RNAME '*' in SAM)"]
+    #[doc = ""]
+    #[doc = "The form `REF:` should be used when the reference name itself contains a colon."]
+    #[doc = ""]
+    #[doc = "Note that SAM files must be bgzf-compressed for iterators to work."]
+    #[doc = "*/"]
     pub fn sam_itr_querys(
         idx: *const hts_idx_t,
-        hdr: *mut bam_hdr_t,
+        hdr: *mut sam_hdr_t,
         region: *const ::std::os::raw::c_char,
     ) -> *mut hts_itr_t;
 }
 extern "C" {
+    #[doc = " Create a multi-region iterator"]
+    #[doc = "** @param idx       Index"]
+    #[doc = "@param hdr       Header"]
+    #[doc = "@param reglist   Array of regions to iterate over"]
+    #[doc = "@param regcount  Number of items in reglist"]
+    #[doc = ""]
+    #[doc = "Each @p reglist entry should have the reference name in the `reg` field, an"]
+    #[doc = "array of regions for that reference in `intervals` and the number of items"]
+    #[doc = "in `intervals` should be stored in `count`.  No other fields need to be filled"]
+    #[doc = "in."]
+    #[doc = ""]
+    #[doc = "The iterator will return all reads overlapping the given regions.  If a read"]
+    #[doc = "overlaps more than one region, it will only be returned once."]
+    #[doc = "*/"]
     pub fn sam_itr_regions(
         idx: *const hts_idx_t,
-        hdr: *mut bam_hdr_t,
+        hdr: *mut sam_hdr_t,
         reglist: *mut hts_reglist_t,
         regcount: ::std::os::raw::c_uint,
-    ) -> *mut hts_itr_multi_t;
+    ) -> *mut hts_itr_t;
+}
+extern "C" {
+    #[doc = " Create a multi-region iterator"]
+    #[doc = "** @param idx       Index"]
+    #[doc = "@param hdr       Header"]
+    #[doc = "@param regarray  Array of ref:interval region specifiers"]
+    #[doc = "@param regcount  Number of items in regarray"]
+    #[doc = ""]
+    #[doc = "Each @p regarray entry is parsed by hts_parse_reg(), and takes one of the"]
+    #[doc = "following forms:"]
+    #[doc = ""]
+    #[doc = "region          | Outputs"]
+    #[doc = "--------------- | -------------"]
+    #[doc = "REF             | All reads with RNAME REF"]
+    #[doc = "REF:            | All reads with RNAME REF"]
+    #[doc = "REF:START       | Reads with RNAME REF overlapping START to end of REF"]
+    #[doc = "REF:-END        | Reads with RNAME REF overlapping start of REF to END"]
+    #[doc = "REF:START-END   | Reads with RNAME REF overlapping START to END"]
+    #[doc = ".               | All reads from the start of the file"]
+    #[doc = "*               | Unmapped reads at the end of the file (RNAME '*' in SAM)"]
+    #[doc = ""]
+    #[doc = "The form `REF:` should be used when the reference name itself contains a colon."]
+    #[doc = ""]
+    #[doc = "The iterator will return all reads overlapping the given regions.  If a read"]
+    #[doc = "overlaps more than one region, it will only be returned once."]
+    #[doc = "*/"]
+    pub fn sam_itr_regarray(
+        idx: *const hts_idx_t,
+        hdr: *mut sam_hdr_t,
+        regarray: *mut *mut ::std::os::raw::c_char,
+        regcount: ::std::os::raw::c_uint,
+    ) -> *mut hts_itr_t;
+}
+extern "C" {
+    pub fn sam_parse_region(
+        h: *mut sam_hdr_t,
+        s: *const ::std::os::raw::c_char,
+        tid: *mut ::std::os::raw::c_int,
+        beg: *mut i64,
+        end: *mut i64,
+        flags: ::std::os::raw::c_int,
+    ) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     pub fn sam_open_mode(
@@ -1380,22 +2680,9 @@ extern "C" {
         format: *const ::std::os::raw::c_char,
     ) -> *mut ::std::os::raw::c_char;
 }
-pub type samFile = htsFile;
-extern "C" {
-    pub fn sam_hdr_parse(
-        l_text: ::std::os::raw::c_int,
-        text: *const ::std::os::raw::c_char,
-    ) -> *mut bam_hdr_t;
-}
-extern "C" {
-    pub fn sam_hdr_read(fp: *mut samFile) -> *mut bam_hdr_t;
-}
-extern "C" {
-    pub fn sam_hdr_write(fp: *mut samFile, h: *const bam_hdr_t) -> ::std::os::raw::c_int;
-}
 extern "C" {
     pub fn sam_hdr_change_HD(
-        h: *mut bam_hdr_t,
+        h: *mut sam_hdr_t,
         key: *const ::std::os::raw::c_char,
         val: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
@@ -1403,49 +2690,114 @@ extern "C" {
 extern "C" {
     pub fn sam_parse1(
         s: *mut kstring_t,
-        h: *mut bam_hdr_t,
+        h: *mut sam_hdr_t,
         b: *mut bam1_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn sam_format1(
-        h: *const bam_hdr_t,
+        h: *const sam_hdr_t,
         b: *const bam1_t,
         str: *mut kstring_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn sam_read1(fp: *mut samFile, h: *mut bam_hdr_t, b: *mut bam1_t) -> ::std::os::raw::c_int;
+    #[doc = " sam_read1 - Read a record from a file"]
+    #[doc = "** @param fp   Pointer to the source file"]
+    #[doc = "*  @param h    Pointer to the header previously read (fully or partially)"]
+    #[doc = "*  @param b    Pointer to the record placeholder"]
+    #[doc = "*  @return >= 0 on successfully reading a new record, -1 on end of stream, < -1 on error"]
+    #[doc = "*/"]
+    pub fn sam_read1(fp: *mut samFile, h: *mut sam_hdr_t, b: *mut bam1_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " sam_write1 - Write a record to a file"]
+    #[doc = "** @param fp    Pointer to the destination file"]
+    #[doc = "*  @param h     Pointer to the header structure previously read"]
+    #[doc = "*  @param b     Pointer to the record to be written"]
+    #[doc = "*  @return >= 0 on successfully writing the record, -1 on error"]
+    #[doc = "*/"]
     pub fn sam_write1(
         fp: *mut samFile,
-        h: *const bam_hdr_t,
+        h: *const sam_hdr_t,
         b: *const bam1_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Return a pointer to an aux record"]
+    #[doc = "** @param b   Pointer to the bam record"]
+    #[doc = "@param tag Desired aux tag"]
+    #[doc = "@return Pointer to the tag data, or NULL if tag is not present or on error"]
+    #[doc = "If the tag is not present, this function returns NULL and sets errno to"]
+    #[doc = "ENOENT.  If the bam record's aux data is corrupt (either a tag has an"]
+    #[doc = "invalid type, or the last record is incomplete) then errno is set to"]
+    #[doc = "EINVAL and NULL is returned."]
+    #[doc = "*/"]
     pub fn bam_aux_get(b: *const bam1_t, tag: *const ::std::os::raw::c_char) -> *mut u8;
 }
 extern "C" {
+    #[doc = " Get an integer aux value"]
+    #[doc = "** @param s Pointer to the tag data, as returned by bam_aux_get()"]
+    #[doc = "@return The value, or 0 if the tag was not an integer type"]
+    #[doc = "If the tag is not an integer type, errno is set to EINVAL.  This function"]
+    #[doc = "will not return the value of floating-point tags."]
+    #[doc = "*/"]
     pub fn bam_aux2i(s: *const u8) -> i64;
 }
 extern "C" {
+    #[doc = " Get an integer aux value"]
+    #[doc = "** @param s Pointer to the tag data, as returned by bam_aux_get()"]
+    #[doc = "@return The value, or 0 if the tag was not an integer type"]
+    #[doc = "If the tag is not an numeric type, errno is set to EINVAL.  The value of"]
+    #[doc = "integer flags will be returned cast to a double."]
+    #[doc = "*/"]
     pub fn bam_aux2f(s: *const u8) -> f64;
 }
 extern "C" {
+    #[doc = " Get a character aux value"]
+    #[doc = "** @param s Pointer to the tag data, as returned by bam_aux_get()."]
+    #[doc = "@return The value, or 0 if the tag was not a character ('A') type"]
+    #[doc = "If the tag is not a character type, errno is set to EINVAL."]
+    #[doc = "*/"]
     pub fn bam_aux2A(s: *const u8) -> ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = " Get a string aux value"]
+    #[doc = "** @param s Pointer to the tag data, as returned by bam_aux_get()."]
+    #[doc = "@return Pointer to the string, or NULL if the tag was not a string type"]
+    #[doc = "If the tag is not a string type ('Z' or 'H'), errno is set to EINVAL."]
+    #[doc = "*/"]
     pub fn bam_aux2Z(s: *const u8) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
+    #[doc = " Get the length of an array-type ('B') tag"]
+    #[doc = "** @param s Pointer to the tag data, as returned by bam_aux_get()."]
+    #[doc = "@return The length of the array, or 0 if the tag is not an array type."]
+    #[doc = "If the tag is not an array type, errno is set to EINVAL."]
+    #[doc = "*/"]
     pub fn bam_auxB_len(s: *const u8) -> u32;
 }
 extern "C" {
+    #[doc = " Get an integer value from an array-type tag"]
+    #[doc = "** @param s   Pointer to the tag data, as returned by bam_aux_get()."]
+    #[doc = "@param idx 0-based Index into the array"]
+    #[doc = "@return The idx'th value, or 0 on error."]
+    #[doc = "If the array is not an integer type, errno is set to EINVAL.  If idx"]
+    #[doc = "is greater than or equal to  the value returned by bam_auxB_len(s),"]
+    #[doc = "errno is set to ERANGE.  In both cases, 0 will be returned."]
+    #[doc = "*/"]
     pub fn bam_auxB2i(s: *const u8, idx: u32) -> i64;
 }
 extern "C" {
+    #[doc = " Get a floating-point value from an array-type tag"]
+    #[doc = "** @param s   Pointer to the tag data, as returned by bam_aux_get()."]
+    #[doc = "@param idx 0-based Index into the array"]
+    #[doc = "@return The idx'th value, or 0.0 on error."]
+    #[doc = "If the array is not a numeric type, errno is set to EINVAL.  This can"]
+    #[doc = "only actually happen if the input record has an invalid type field.  If"]
+    #[doc = "idx is greater than or equal to  the value returned by bam_auxB_len(s),"]
+    #[doc = "errno is set to ERANGE.  In both cases, 0.0 will be returned."]
+    #[doc = "*/"]
     pub fn bam_auxB2f(s: *const u8, idx: u32) -> f64;
 }
 extern "C" {
@@ -1468,6 +2820,37 @@ extern "C" {
         data: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
+extern "C" {
+    pub fn bam_aux_update_int(
+        b: *mut bam1_t,
+        tag: *const ::std::os::raw::c_char,
+        val: i64,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn bam_aux_update_float(
+        b: *mut bam1_t,
+        tag: *const ::std::os::raw::c_char,
+        val: f32,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn bam_aux_update_array(
+        b: *mut bam1_t,
+        tag: *const ::std::os::raw::c_char,
+        type_: u8,
+        items: u32,
+        data: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+#[doc = " @typedef"]
+#[doc = "@abstract Generic pileup 'client data'."]
+#[doc = ""]
+#[doc = "@discussion The pileup iterator allows setting a constructor and"]
+#[doc = "destructor function, which will be called every time a sequence is"]
+#[doc = "fetched and discarded.  This permits caching of per-sequence data in"]
+#[doc = "a tidy manner during the pileup process.  This union is the cached"]
+#[doc = "data to be manipulated by the \"client\" (the caller of pileup)."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union bam_pileup_cd {
@@ -1476,6 +2859,24 @@ pub union bam_pileup_cd {
     pub f: f64,
     _bindgen_union_align: u64,
 }
+#[doc = " @typedef"]
+#[doc = "@abstract Structure for one alignment covering the pileup position."]
+#[doc = "@field  b          pointer to the alignment"]
+#[doc = "@field  qpos       position of the read base at the pileup site, 0-based"]
+#[doc = "@field  indel      indel length; 0 for no indel, positive for ins and negative for del"]
+#[doc = "@field  level      the level of the read in the \"viewer\" mode"]
+#[doc = "@field  is_del     1 iff the base on the padded read is a deletion"]
+#[doc = "@field  is_head    1 iff this is the first base in the query sequence"]
+#[doc = "@field  is_tail    1 iff this is the last base in the query sequence"]
+#[doc = "@field  is_refskip 1 iff the base on the padded read is part of CIGAR N op"]
+#[doc = "@field  aux        (used by bcf_call_gap_prep())"]
+#[doc = "@field  cigar_ind  index of the CIGAR operator that has just been processed"]
+#[doc = ""]
+#[doc = "@discussion See also bam_plbuf_push() and bam_lplbuf_push(). The"]
+#[doc = "difference between the two functions is that the former does not"]
+#[doc = "set bam_pileup1_t::level, while the later does. Level helps the"]
+#[doc = "implementation of alignment viewers, but calculating this has some"]
+#[doc = "overhead."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bam_pileup1_t {
@@ -1485,6 +2886,7 @@ pub struct bam_pileup1_t {
     pub level: ::std::os::raw::c_int,
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u32>,
     pub cd: bam_pileup_cd,
+    pub cigar_ind: ::std::os::raw::c_int,
 }
 impl bam_pileup1_t {
     #[inline]
@@ -1533,13 +2935,13 @@ impl bam_pileup1_t {
     }
     #[inline]
     pub fn aux(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 28u8) as u32) }
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 27u8) as u32) }
     }
     #[inline]
     pub fn set_aux(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(4usize, 28u8, val as u64)
+            self._bitfield_1.set(5usize, 27u8, val as u64)
         }
     }
     #[inline]
@@ -1568,7 +2970,7 @@ impl bam_pileup1_t {
             let is_refskip: u32 = unsafe { ::std::mem::transmute(is_refskip) };
             is_refskip as u64
         });
-        __bindgen_bitfield_unit.set(4usize, 28u8, {
+        __bindgen_bitfield_unit.set(5usize, 27u8, {
             let aux: u32 = unsafe { ::std::mem::transmute(aux) };
             aux as u64
         });
@@ -1594,6 +2996,10 @@ pub struct __bam_mplp_t {
 }
 pub type bam_mplp_t = *mut __bam_mplp_t;
 extern "C" {
+    #[doc = "  bam_plp_init() - sets an iterator over multiple"]
+    #[doc = "  @func:      see mplp_func in bam_plcmd.c in samtools for an example. Expected return"]
+    #[doc = "              status: 0 on success, -1 on end, < -1 on non-recoverable errors"]
+    #[doc = "  @data:      user data to pass to @func"]
     pub fn bam_plp_init(func: bam_plp_auto_f, data: *mut ::std::os::raw::c_void) -> bam_plp_t;
 }
 extern "C" {
@@ -1625,6 +3031,12 @@ extern "C" {
     pub fn bam_plp_reset(iter: bam_plp_t);
 }
 extern "C" {
+    #[doc = "  bam_plp_constructor() - sets a callback to initialise any per-pileup1_t fields."]
+    #[doc = "  @plp:       The bam_plp_t initialised using bam_plp_init."]
+    #[doc = "  @func:      The callback function itself.  When called, it is given the"]
+    #[doc = "              data argument (specified in bam_plp_init), the bam structure and"]
+    #[doc = "              a pointer to a locally allocated bam_pileup_cd union.  This union"]
+    #[doc = "              will also be present in each bam_pileup1_t created."]
     pub fn bam_plp_constructor(
         plp: bam_plp_t,
         func: ::std::option::Option<
@@ -1649,6 +3061,26 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " Get pileup padded insertion sequence"]
+    #[doc = "**"]
+    #[doc = "* @param p       pileup data"]
+    #[doc = "* @param ins     the kstring where the insertion sequence will be written"]
+    #[doc = "* @param del_len location for deletion length"]
+    #[doc = "* @return the length of insertion string on success; -1 on failure."]
+    #[doc = "*"]
+    #[doc = "* Fills out the kstring with the padded insertion sequence for the current"]
+    #[doc = "* location in 'p'.  If this is not an insertion site, the string is blank."]
+    #[doc = "*"]
+    #[doc = "* If del_len is not NULL, the location pointed to is set to the length of"]
+    #[doc = "* any deletion immediately following the insertion, or zero if none."]
+    #[doc = "*/"]
+    pub fn bam_plp_insertion(
+        p: *const bam_pileup1_t,
+        ins: *mut kstring_t,
+        del_len: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
     pub fn bam_mplp_init(
         n: ::std::os::raw::c_int,
         func: bam_plp_auto_f,
@@ -1656,7 +3088,19 @@ extern "C" {
     ) -> bam_mplp_t;
 }
 extern "C" {
-    pub fn bam_mplp_init_overlaps(iter: bam_mplp_t);
+    #[doc = " Set up mpileup overlap detection"]
+    #[doc = "**"]
+    #[doc = "* @param iter    mpileup iterator"]
+    #[doc = "* @return 0 on success; a negative value on error"]
+    #[doc = "*"]
+    #[doc = "*  If called, mpileup will detect overlapping"]
+    #[doc = "*  read pairs and for each base pair set the base quality of the"]
+    #[doc = "*  lower-quality base to zero, thus effectively discarding it from"]
+    #[doc = "*  calling. If the two bases are identical, the quality of the other base"]
+    #[doc = "*  is increased to the sum of their qualities (capped at 200), otherwise"]
+    #[doc = "*  it is multiplied by 0.8."]
+    #[doc = "*/"]
+    pub fn bam_mplp_init_overlaps(iter: bam_mplp_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn bam_mplp_destroy(iter: bam_mplp_t);
@@ -1701,6 +3145,7 @@ extern "C" {
     );
 }
 extern "C" {
+    #[doc = " BAQ calculation and realignment *"]
     pub fn sam_cap_mapq(
         b: *mut bam1_t,
         ref_: *const ::std::os::raw::c_char,
@@ -1709,6 +3154,45 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    #[doc = " Calculate BAQ scores"]
+    #[doc = "** @param b   BAM record"]
+    #[doc = "@param ref     Reference sequence"]
+    #[doc = "@param ref_len Reference sequence length"]
+    #[doc = "@param flag    Flags, see description"]
+    #[doc = "@return 0 on success \\n"]
+    #[doc = "-1 if the read was unmapped, zero length, had no quality values, did not have at least one M, X or = CIGAR operator, or included a reference skip. \\n"]
+    #[doc = "-3 if BAQ alignment has already been done and does not need to be applied, or has already been applied. \\n"]
+    #[doc = "-4 if alignment failed (most likely due to running out of memory)"]
+    #[doc = ""]
+    #[doc = "This function calculates base alignment quality (BAQ) values using the method"]
+    #[doc = "described in \"Improving SNP discovery by base alignment quality\", Heng Li,"]
+    #[doc = "Bioinformatics, Volume 27, Issue 8 (https://doi.org/10.1093/bioinformatics/btr076)."]
+    #[doc = ""]
+    #[doc = "The following @param flag bits can be used:"]
+    #[doc = ""]
+    #[doc = "Bit 0: Adjust the quality values using the BAQ values"]
+    #[doc = ""]
+    #[doc = "If set, the data in the BQ:Z tag is used to adjust the quality values, and"]
+    #[doc = "the BQ:Z tag is renamed to ZQ:Z."]
+    #[doc = ""]
+    #[doc = "If clear, and a ZQ:Z tag is present, the quality values are reverted using"]
+    #[doc = "the data in the tag, and the tag is renamed to BQ:Z."]
+    #[doc = ""]
+    #[doc = "Bit 1: Use \"extended\" BAQ."]
+    #[doc = ""]
+    #[doc = "Changes the BAQ calculation to increase sensitivity at the expense of"]
+    #[doc = "reduced specificity."]
+    #[doc = ""]
+    #[doc = "Bit 2: Recalculate BAQ, even if a BQ tag is present."]
+    #[doc = ""]
+    #[doc = "Force BAQ to be recalculated.  Note that a ZQ:Z tag will always disable"]
+    #[doc = "recalculation."]
+    #[doc = ""]
+    #[doc = "@bug"]
+    #[doc = "If the input read has both BQ:Z and ZQ:Z tags, the ZQ:Z one will be removed."]
+    #[doc = "Depending on what previous processing happened, this may or may not be the"]
+    #[doc = "correct thing to do.  It would be wise to avoid this situation if possible."]
+    #[doc = "*/"]
     pub fn sam_prob_realn(
         b: *mut bam1_t,
         ref_: *const ::std::os::raw::c_char,

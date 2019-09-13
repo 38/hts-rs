@@ -8,7 +8,7 @@ use num_cpus::get as get_num_cpus;
 use std::env;
 
 fn create_hts_bindings(base: &str) -> Result<(), ()> {
-    let include_param = format!("-I{}/htslib/htslib", base);
+    let include_param = format!("-I{}/htslib/", base);
     if !Path::new("generated/hts.rs").exists() {
         BG::default()
             .header("hts_inc.h")
