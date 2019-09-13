@@ -22,7 +22,7 @@ fn create_hts_bindings(base: &str) -> Result<(), ()> {
 }
 fn main() -> Result<(), std::io::Error> {
     let base = format!("{}", env::var("CARGO_MANIFEST_DIR").unwrap());
-    let hts_bin_path = format!("{}/htslib/libhts.a", base);
+    let hts_bin_path = format!("{}/htslib/libhts.so", base);
     if let Err(_) = create_hts_bindings(base.as_str()) {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
