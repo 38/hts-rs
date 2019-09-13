@@ -30,7 +30,7 @@ impl Drop for BamFile {
 
         if self.hdr != null_mut() {
             unsafe {
-                sam_hdr_destroy(self.hdr);
+                bam_hdr_destroy(self.hdr);
             }
             self.hdr = null_mut();
         }

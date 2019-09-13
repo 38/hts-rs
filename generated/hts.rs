@@ -2,54 +2,43 @@
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct __BindgenBitfieldUnit<Storage, Align>
-where
-    Storage: AsRef<[u8]> + AsMut<[u8]>,
-{
+pub struct __BindgenBitfieldUnit<Storage, Align> {
     storage: Storage,
     align: [Align; 0],
 }
-
+impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align> {
+    #[inline]
+    pub const fn new(storage: Storage) -> Self {
+        Self { storage, align: [] }
+    }
+}
 impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align>
 where
     Storage: AsRef<[u8]> + AsMut<[u8]>,
 {
     #[inline]
-    pub fn new(storage: Storage) -> Self {
-        Self { storage, align: [] }
-    }
-
-    #[inline]
     pub fn get_bit(&self, index: usize) -> bool {
         debug_assert!(index / 8 < self.storage.as_ref().len());
-
         let byte_index = index / 8;
         let byte = self.storage.as_ref()[byte_index];
-
         let bit_index = if cfg!(target_endian = "big") {
             7 - (index % 8)
         } else {
             index % 8
         };
-
         let mask = 1 << bit_index;
-
         byte & mask == mask
     }
-
     #[inline]
     pub fn set_bit(&mut self, index: usize, val: bool) {
         debug_assert!(index / 8 < self.storage.as_ref().len());
-
         let byte_index = index / 8;
         let byte = &mut self.storage.as_mut()[byte_index];
-
         let bit_index = if cfg!(target_endian = "big") {
             7 - (index % 8)
         } else {
             index % 8
         };
-
         let mask = 1 << bit_index;
         if val {
             *byte |= mask;
@@ -57,15 +46,12 @@ where
             *byte &= !mask;
         }
     }
-
     #[inline]
     pub fn get(&self, bit_offset: usize, bit_width: u8) -> u64 {
         debug_assert!(bit_width <= 64);
         debug_assert!(bit_offset / 8 < self.storage.as_ref().len());
         debug_assert!((bit_offset + (bit_width as usize)) / 8 <= self.storage.as_ref().len());
-
         let mut val = 0;
-
         for i in 0..(bit_width as usize) {
             if self.get_bit(i + bit_offset) {
                 let index = if cfg!(target_endian = "big") {
@@ -76,16 +62,13 @@ where
                 val |= 1 << index;
             }
         }
-
         val
     }
-
     #[inline]
     pub fn set(&mut self, bit_offset: usize, bit_width: u8, val: u64) {
         debug_assert!(bit_width <= 64);
         debug_assert!(bit_offset / 8 < self.storage.as_ref().len());
         debug_assert!((bit_offset + (bit_width as usize)) / 8 <= self.storage.as_ref().len());
-
         for i in 0..(bit_width as usize) {
             let mask = 1 << i;
             let val_bit_is_set = val & mask == mask;
@@ -106,7 +89,7 @@ pub const __USE_ISOC99: u32 = 1;
 pub const __USE_ISOC95: u32 = 1;
 pub const __USE_POSIX_IMPLICITLY: u32 = 1;
 pub const _POSIX_SOURCE: u32 = 1;
-pub const _POSIX_C_SOURCE: f64 = 200809.0;
+pub const _POSIX_C_SOURCE: u32 = 200809;
 pub const __USE_POSIX: u32 = 1;
 pub const __USE_POSIX2: u32 = 1;
 pub const __USE_POSIX199309: u32 = 1;
@@ -121,7 +104,7 @@ pub const __GLIBC_USE_DEPRECATED_GETS: u32 = 0;
 pub const _STDC_PREDEF_H: u32 = 1;
 pub const __STDC_IEC_559__: u32 = 1;
 pub const __STDC_IEC_559_COMPLEX__: u32 = 1;
-pub const __STDC_ISO_10646__: f64 = 201706.0;
+pub const __STDC_ISO_10646__: u32 = 201706;
 pub const __STDC_NO_THREADS__: u32 = 1;
 pub const __GNU_LIBRARY__: u32 = 6;
 pub const __GLIBC__: u32 = 2;
@@ -164,26 +147,24 @@ pub const UINT_LEAST8_MAX: u32 = 255;
 pub const UINT_LEAST16_MAX: u32 = 65535;
 pub const UINT_LEAST32_MAX: u32 = 4294967295;
 pub const INT_FAST8_MIN: i32 = -128;
-pub const INT_FAST16_MIN: f64 = -9223372036854776000.0;
-pub const INT_FAST32_MIN: f64 = -9223372036854776000.0;
+pub const INT_FAST16_MIN: i64 = -9223372036854775808;
+pub const INT_FAST32_MIN: i64 = -9223372036854775808;
 pub const INT_FAST8_MAX: u32 = 127;
-pub const INT_FAST16_MAX: f64 = 9223372036854776000.0;
-pub const INT_FAST32_MAX: f64 = 9223372036854776000.0;
+pub const INT_FAST16_MAX: u64 = 9223372036854775807;
+pub const INT_FAST32_MAX: u64 = 9223372036854775807;
 pub const UINT_FAST8_MAX: u32 = 255;
 pub const UINT_FAST16_MAX: i32 = -1;
 pub const UINT_FAST32_MAX: i32 = -1;
-pub const INTPTR_MIN: f64 = -9223372036854776000.0;
-pub const INTPTR_MAX: f64 = 9223372036854776000.0;
+pub const INTPTR_MIN: i64 = -9223372036854775808;
+pub const INTPTR_MAX: u64 = 9223372036854775807;
 pub const UINTPTR_MAX: i32 = -1;
-pub const PTRDIFF_MIN: f64 = -9223372036854776000.0;
-pub const PTRDIFF_MAX: f64 = 9223372036854776000.0;
+pub const PTRDIFF_MIN: i64 = -9223372036854775808;
+pub const PTRDIFF_MAX: u64 = 9223372036854775807;
 pub const SIG_ATOMIC_MIN: i32 = -2147483648;
 pub const SIG_ATOMIC_MAX: u32 = 2147483647;
 pub const SIZE_MAX: i32 = -1;
 pub const WINT_MIN: u32 = 0;
 pub const WINT_MAX: u32 = 4294967295;
-pub const HTS_RESIZE_CLEAR: u32 = 1;
-pub const HTS_IDX_DELIM: &'static [u8; 8usize] = b"##idx##\0";
 pub const HTS_IDX_NOCOOR: i32 = -2;
 pub const HTS_IDX_START: i32 = -3;
 pub const HTS_IDX_REST: i32 = -4;
@@ -192,11 +173,7 @@ pub const HTS_FMT_CSI: u32 = 0;
 pub const HTS_FMT_BAI: u32 = 1;
 pub const HTS_FMT_TBI: u32 = 2;
 pub const HTS_FMT_CRAI: u32 = 3;
-pub const HTS_IDX_SAVE_REMOTE: u32 = 1;
-pub const HTS_IDX_SILENT_FAIL: u32 = 2;
 pub const HTS_PARSE_THOUSANDS_SEP: u32 = 1;
-pub const HTS_PARSE_ONE_COORD: u32 = 2;
-pub const HTS_PARSE_LIST: u32 = 4;
 pub const FT_UNKN: u32 = 0;
 pub const FT_GZ: u32 = 1;
 pub const FT_VCF: u32 = 2;
@@ -204,7 +181,7 @@ pub const FT_VCF_GZ: u32 = 3;
 pub const FT_BCF: u32 = 4;
 pub const FT_BCF_GZ: u32 = 5;
 pub const FT_STDIN: u32 = 8;
-pub const SAM_FORMAT_VERSION: &'static [u8; 4usize] = b"1.6\0";
+pub const SAM_FORMAT_VERSION: &'static [u8; 4usize] = b"1.5\0";
 pub const BAM_CMATCH: u32 = 0;
 pub const BAM_CINS: u32 = 1;
 pub const BAM_CDEL: u32 = 2;
@@ -262,29 +239,6 @@ pub type __pid_t = ::std::os::raw::c_int;
 pub struct __fsid_t {
     pub __val: [::std::os::raw::c_int; 2usize],
 }
-#[test]
-fn bindgen_test_layout___fsid_t() {
-    assert_eq!(
-        ::std::mem::size_of::<__fsid_t>(),
-        8usize,
-        concat!("Size of: ", stringify!(__fsid_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__fsid_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(__fsid_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<__fsid_t>())).__val as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(__fsid_t),
-            "::",
-            stringify!(__val)
-        )
-    );
-}
 pub type __clock_t = ::std::os::raw::c_long;
 pub type __rlim_t = ::std::os::raw::c_ulong;
 pub type __rlim64_t = ::std::os::raw::c_ulong;
@@ -332,80 +286,30 @@ pub type intmax_t = __intmax_t;
 pub type uintmax_t = __uintmax_t;
 pub type wchar_t = ::std::os::raw::c_int;
 #[repr(C)]
+#[repr(align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct max_align_t {
     pub __clang_max_align_nonce1: ::std::os::raw::c_longlong,
     pub __bindgen_padding_0: u64,
-    pub __clang_max_align_nonce2: f64,
+    pub __clang_max_align_nonce2: u128,
 }
-#[test]
-fn bindgen_test_layout_max_align_t() {
-    assert_eq!(
-        ::std::mem::size_of::<max_align_t>(),
-        32usize,
-        concat!("Size of: ", stringify!(max_align_t))
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<max_align_t>())).__clang_max_align_nonce1 as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(max_align_t),
-            "::",
-            stringify!(__clang_max_align_nonce1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<max_align_t>())).__clang_max_align_nonce2 as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(max_align_t),
-            "::",
-            stringify!(__clang_max_align_nonce2)
-        )
-    );
-}
-///< All logging disabled.
 pub const htsLogLevel_HTS_LOG_OFF: htsLogLevel = 0;
-///< Logging of errors only.
 pub const htsLogLevel_HTS_LOG_ERROR: htsLogLevel = 1;
-///< Logging of errors and warnings.
 pub const htsLogLevel_HTS_LOG_WARNING: htsLogLevel = 3;
-///< Logging of errors, warnings, and normal but significant events.
 pub const htsLogLevel_HTS_LOG_INFO: htsLogLevel = 4;
-///< Logging of all except the most detailed debug events.
 pub const htsLogLevel_HTS_LOG_DEBUG: htsLogLevel = 5;
-///< All logging enabled.
 pub const htsLogLevel_HTS_LOG_TRACE: htsLogLevel = 6;
-/// Log levels.
 pub type htsLogLevel = u32;
 extern "C" {
-    /// Sets the selected log level.
     pub fn hts_set_log_level(level: htsLogLevel);
 }
 extern "C" {
-    /// Gets the selected log level.
     pub fn hts_get_log_level() -> htsLogLevel;
 }
 extern "C" {
-    #[link_name = "\u{1}hts_verbose"]
     pub static mut hts_verbose: ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Logs an event.
-    /// \param severity      Severity of the event:
-    ///                      - HTS_LOG_ERROR means that something went wrong so that a task could not be completed.
-    ///                      - HTS_LOG_WARNING means that something unexpected happened, but that execution can continue, perhaps in a degraded mode.
-    ///                      - HTS_LOG_INFO means that something normal but significant happened.
-    ///                      - HTS_LOG_DEBUG means that something normal and insignificant happened.
-    ///                      - HTS_LOG_TRACE means that something happened that might be of interest when troubleshooting.
-    /// \param context       Context where the event occurred. Typically set to "__func__".
-    /// \param format        Format string with placeholders, like printf.
     pub fn hts_log(
         severity: htsLogLevel,
         context: *const ::std::os::raw::c_char,
@@ -435,79 +339,18 @@ pub struct hts_tpool {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct kstring_t {
+pub struct __kstring_t {
     pub l: usize,
     pub m: usize,
     pub s: *mut ::std::os::raw::c_char,
 }
-#[test]
-fn bindgen_test_layout_kstring_t() {
-    assert_eq!(
-        ::std::mem::size_of::<kstring_t>(),
-        24usize,
-        concat!("Size of: ", stringify!(kstring_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<kstring_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(kstring_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<kstring_t>())).l as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(kstring_t),
-            "::",
-            stringify!(l)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<kstring_t>())).m as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(kstring_t),
-            "::",
-            stringify!(m)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<kstring_t>())).s as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(kstring_t),
-            "::",
-            stringify!(s)
-        )
-    );
-}
-extern "C" {
-    pub fn hts_resize_array_(
-        arg1: usize,
-        arg2: usize,
-        arg3: usize,
-        arg4: *mut ::std::os::raw::c_void,
-        arg5: *mut *mut ::std::os::raw::c_void,
-        arg6: ::std::os::raw::c_int,
-        arg7: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Wrapper function for free(). Enables memory deallocation across DLL
-    /// boundary. Should be used by all applications, which are compiled
-    /// with a different standard library than htslib and call htslib
-    /// methods that return dynamically allocated data.
-    pub fn hts_free(ptr: *mut ::std::os::raw::c_void);
-}
+pub type kstring_t = __kstring_t;
 pub const htsFormatCategory_unknown_category: htsFormatCategory = 0;
 pub const htsFormatCategory_sequence_data: htsFormatCategory = 1;
 pub const htsFormatCategory_variant_data: htsFormatCategory = 2;
 pub const htsFormatCategory_index_file: htsFormatCategory = 3;
 pub const htsFormatCategory_region_list: htsFormatCategory = 4;
 pub const htsFormatCategory_category_maximum: htsFormatCategory = 32767;
-/// File I/O *
 pub type htsFormatCategory = u32;
 pub const htsExactFormat_unknown_format: htsExactFormat = 0;
 pub const htsExactFormat_binary_format: htsExactFormat = 1;
@@ -525,18 +368,12 @@ pub const htsExactFormat_tbi: htsExactFormat = 12;
 pub const htsExactFormat_bed: htsExactFormat = 13;
 pub const htsExactFormat_htsget: htsExactFormat = 14;
 pub const htsExactFormat_json: htsExactFormat = 14;
-pub const htsExactFormat_empty_format: htsExactFormat = 15;
-pub const htsExactFormat_fasta_format: htsExactFormat = 16;
-pub const htsExactFormat_fastq_format: htsExactFormat = 17;
-pub const htsExactFormat_fai_format: htsExactFormat = 18;
-pub const htsExactFormat_fqi_format: htsExactFormat = 19;
 pub const htsExactFormat_format_maximum: htsExactFormat = 32767;
 pub type htsExactFormat = u32;
 pub const htsCompression_no_compression: htsCompression = 0;
 pub const htsCompression_gzip: htsCompression = 1;
 pub const htsCompression_bgzf: htsCompression = 2;
 pub const htsCompression_custom: htsCompression = 3;
-pub const htsCompression_bzip2_compression: htsCompression = 4;
 pub const htsCompression_compression_maximum: htsCompression = 32767;
 pub type htsCompression = u32;
 #[repr(C)]
@@ -555,118 +392,6 @@ pub struct htsFormat__bindgen_ty_1 {
     pub major: ::std::os::raw::c_short,
     pub minor: ::std::os::raw::c_short,
 }
-#[test]
-fn bindgen_test_layout_htsFormat__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<htsFormat__bindgen_ty_1>(),
-        4usize,
-        concat!("Size of: ", stringify!(htsFormat__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<htsFormat__bindgen_ty_1>(),
-        2usize,
-        concat!("Alignment of ", stringify!(htsFormat__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat__bindgen_ty_1>())).major as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat__bindgen_ty_1),
-            "::",
-            stringify!(major)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat__bindgen_ty_1>())).minor as *const _ as usize },
-        2usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat__bindgen_ty_1),
-            "::",
-            stringify!(minor)
-        )
-    );
-}
-#[test]
-fn bindgen_test_layout_htsFormat() {
-    assert_eq!(
-        ::std::mem::size_of::<htsFormat>(),
-        32usize,
-        concat!("Size of: ", stringify!(htsFormat))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<htsFormat>(),
-        8usize,
-        concat!("Alignment of ", stringify!(htsFormat))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat>())).category as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat),
-            "::",
-            stringify!(category)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat>())).format as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat),
-            "::",
-            stringify!(format)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat>())).version as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat),
-            "::",
-            stringify!(version)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat>())).compression as *const _ as usize },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat),
-            "::",
-            stringify!(compression)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat>())).compression_level as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat),
-            "::",
-            stringify!(compression_level)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFormat>())).specific as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFormat),
-            "::",
-            stringify!(specific)
-        )
-    );
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __hts_idx_t {
-    _unused: [u8; 0],
-}
-pub type hts_idx_t = __hts_idx_t;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct htsFile {
@@ -676,11 +401,7 @@ pub struct htsFile {
     pub fn_: *mut ::std::os::raw::c_char,
     pub fn_aux: *mut ::std::os::raw::c_char,
     pub fp: htsFile__bindgen_ty_1,
-    pub state: *mut ::std::os::raw::c_void,
     pub format: htsFormat,
-    pub idx: *mut hts_idx_t,
-    pub fnidx: *const ::std::os::raw::c_char,
-    pub bam_header: *mut sam_hdr_t,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -689,162 +410,6 @@ pub union htsFile__bindgen_ty_1 {
     pub cram: *mut cram_fd,
     pub hfile: *mut hFILE,
     _bindgen_union_align: u64,
-}
-#[test]
-fn bindgen_test_layout_htsFile__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<htsFile__bindgen_ty_1>(),
-        8usize,
-        concat!("Size of: ", stringify!(htsFile__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<htsFile__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(htsFile__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile__bindgen_ty_1>())).bgzf as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile__bindgen_ty_1),
-            "::",
-            stringify!(bgzf)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile__bindgen_ty_1>())).cram as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile__bindgen_ty_1),
-            "::",
-            stringify!(cram)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile__bindgen_ty_1>())).hfile as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile__bindgen_ty_1),
-            "::",
-            stringify!(hfile)
-        )
-    );
-}
-#[test]
-fn bindgen_test_layout_htsFile() {
-    assert_eq!(
-        ::std::mem::size_of::<htsFile>(),
-        128usize,
-        concat!("Size of: ", stringify!(htsFile))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<htsFile>(),
-        8usize,
-        concat!("Alignment of ", stringify!(htsFile))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).lineno as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(lineno)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).line as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(line)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).fn_ as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(fn_)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).fn_aux as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(fn_aux)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).fp as *const _ as usize },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(fp)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).state as *const _ as usize },
-        64usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(state)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).format as *const _ as usize },
-        72usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(format)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).idx as *const _ as usize },
-        104usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(idx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).fnidx as *const _ as usize },
-        112usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(fnidx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsFile>())).bam_header as *const _ as usize },
-        120usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsFile),
-            "::",
-            stringify!(bam_header)
-        )
-    );
 }
 impl htsFile {
     #[inline]
@@ -957,39 +522,6 @@ pub struct htsThreadPool {
     pub pool: *mut hts_tpool,
     pub qsize: ::std::os::raw::c_int,
 }
-#[test]
-fn bindgen_test_layout_htsThreadPool() {
-    assert_eq!(
-        ::std::mem::size_of::<htsThreadPool>(),
-        16usize,
-        concat!("Size of: ", stringify!(htsThreadPool))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<htsThreadPool>(),
-        8usize,
-        concat!("Alignment of ", stringify!(htsThreadPool))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsThreadPool>())).pool as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsThreadPool),
-            "::",
-            stringify!(pool)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<htsThreadPool>())).qsize as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(htsThreadPool),
-            "::",
-            stringify!(qsize)
-        )
-    );
-}
 pub const sam_fields_SAM_QNAME: sam_fields = 1;
 pub const sam_fields_SAM_FLAG: sam_fields = 2;
 pub const sam_fields_SAM_RNAME: sam_fields = 4;
@@ -1025,8 +557,6 @@ pub const hts_fmt_option_CRAM_OPT_USE_RANS: hts_fmt_option = 17;
 pub const hts_fmt_option_CRAM_OPT_REQUIRED_FIELDS: hts_fmt_option = 18;
 pub const hts_fmt_option_CRAM_OPT_LOSSY_NAMES: hts_fmt_option = 19;
 pub const hts_fmt_option_CRAM_OPT_BASES_PER_SLICE: hts_fmt_option = 20;
-pub const hts_fmt_option_CRAM_OPT_STORE_MD: hts_fmt_option = 21;
-pub const hts_fmt_option_CRAM_OPT_STORE_NM: hts_fmt_option = 22;
 pub const hts_fmt_option_HTS_OPT_COMPRESSION_LEVEL: hts_fmt_option = 100;
 pub const hts_fmt_option_HTS_OPT_NTHREADS: hts_fmt_option = 101;
 pub const hts_fmt_option_HTS_OPT_THREAD_POOL: hts_fmt_option = 102;
@@ -1047,92 +577,6 @@ pub union hts_opt__bindgen_ty_1 {
     pub i: ::std::os::raw::c_int,
     pub s: *mut ::std::os::raw::c_char,
     _bindgen_union_align: u64,
-}
-#[test]
-fn bindgen_test_layout_hts_opt__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_opt__bindgen_ty_1>(),
-        8usize,
-        concat!("Size of: ", stringify!(hts_opt__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_opt__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_opt__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_opt__bindgen_ty_1>())).i as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_opt__bindgen_ty_1),
-            "::",
-            stringify!(i)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_opt__bindgen_ty_1>())).s as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_opt__bindgen_ty_1),
-            "::",
-            stringify!(s)
-        )
-    );
-}
-#[test]
-fn bindgen_test_layout_hts_opt() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_opt>(),
-        32usize,
-        concat!("Size of: ", stringify!(hts_opt))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_opt>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_opt))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_opt>())).arg as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_opt),
-            "::",
-            stringify!(arg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_opt>())).opt as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_opt),
-            "::",
-            stringify!(opt)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_opt>())).val as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_opt),
-            "::",
-            stringify!(val)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_opt>())).next as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_opt),
-            "::",
-            stringify!(next)
-        )
-    );
 }
 extern "C" {
     pub fn hts_opt_add(
@@ -1159,83 +603,30 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[link_name = "\u{1}seq_nt16_table"]
     pub static mut seq_nt16_table: [::std::os::raw::c_uchar; 256usize];
 }
 extern "C" {
-    #[link_name = "\u{1}seq_nt16_str"]
     pub static mut seq_nt16_str: [::std::os::raw::c_char; 0usize];
 }
 extern "C" {
-    #[link_name = "\u{1}seq_nt16_int"]
     pub static mut seq_nt16_int: [::std::os::raw::c_int; 0usize];
 }
 extern "C" {
-    ///@abstract  Get the htslib version number
-    ///@return    For released versions, a string like "N.N[.N]"; or git describe
-    ///output if using a library built within a Git repository.
     pub fn hts_version() -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    ///@abstract    Determine format by peeking at the start of a file
-    ///@param fp    File opened for reading, positioned at the beginning
-    ///@param fmt   Format structure that will be filled out on return
-    ///@return      0 for success, or negative if an error occurred.
     pub fn hts_detect_format(fp: *mut hFILE, fmt: *mut htsFormat) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///@abstract    Get a human-readable description of the file format
-    ///@param fmt   Format structure holding type, version, compression, etc.
-    ///@return      Description string, to be freed by the caller after use.
     pub fn hts_format_description(format: *const htsFormat) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
-    ///@abstract       Open a sequence data (SAM/BAM/CRAM) or variant data (VCF/BCF)
-    ///or possibly-compressed textual line-orientated file
-    ///@param fn       The file name or "-" for stdin/stdout. For indexed files
-    ///with a non-standard naming, the file name can include the
-    ///name of the index file delimited with HTS_IDX_DELIM
-    ///@param mode     Mode matching / [rwa][bceguxz0-9]* /
-    ///@discussion
-    ///With 'r' opens for reading; any further format mode letters are ignored
-    ///as the format is detected by checking the first few bytes or BGZF blocks
-    ///of the file.  With 'w' or 'a' opens for writing or appending, with format
-    ///specifier letters:
-    ///b  binary format (BAM, BCF, etc) rather than text (SAM, VCF, etc)
-    ///c  CRAM format
-    ///g  gzip compressed
-    ///u  uncompressed
-    ///z  bgzf compressed
-    ///[0-9]  zlib compression level
-    ///and with non-format option letters (for any of 'r'/'w'/'a'):
-    ///e  close the file on exec(2) (opens with O_CLOEXEC, where supported)
-    ///x  create the file exclusively (opens with O_EXCL, where supported)
-    ///Note that there is a distinction between 'u' and '0': the first yields
-    ///plain uncompressed output whereas the latter outputs uncompressed data
-    ///wrapped in the zlib format.
-    ///@example
-    ///[rw]b  .. compressed BCF, BAM, FAI
-    ///[rw]bu .. uncompressed BCF
-    ///[rw]z  .. compressed VCF
-    ///[rw]   .. uncompressed VCF
     pub fn hts_open(
         fn_: *const ::std::os::raw::c_char,
         mode: *const ::std::os::raw::c_char,
     ) -> *mut htsFile;
 }
 extern "C" {
-    ///@abstract       Open a SAM/BAM/CRAM/VCF/BCF/etc file
-    ///@param fn       The file name or "-" for stdin/stdout
-    ///@param mode     Open mode, as per hts_open()
-    ///@param fmt      Optional format specific parameters
-    ///@discussion
-    ///See hts_open() for description of fn and mode.
-    ///// TODO Update documentation for s/opts/fmt/
-    ///Opts contains a format string (sam, bam, cram, vcf, bcf) which will,
-    ///if defined, override mode.  Opts also contains a linked list of hts_opt
-    ///structures to apply to the open file handle.  These can contain things
-    ///like pointers to the reference or information on compression levels,
-    ///block sizes, etc.
     pub fn hts_open_format(
         fn_: *const ::std::os::raw::c_char,
         mode: *const ::std::os::raw::c_char,
@@ -1243,9 +634,6 @@ extern "C" {
     ) -> *mut htsFile;
 }
 extern "C" {
-    ///@abstract       Open an existing stream as a SAM/BAM/CRAM/VCF/BCF/etc file
-    ///@param fn       The already-open file handle
-    ///@param mode     Open mode, as per hts_open()
     pub fn hts_hopen(
         fp: *mut hFILE,
         fn_: *const ::std::os::raw::c_char,
@@ -1253,29 +641,15 @@ extern "C" {
     ) -> *mut htsFile;
 }
 extern "C" {
-    ///@abstract  Close a file handle, flushing buffered data for output streams
-    ///@param fp  The file handle to be closed
-    ///@return    0 for success, or negative if an error occurred.
     pub fn hts_close(fp: *mut htsFile) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///@abstract  Returns the file's format information
-    ///@param fp  The file handle
-    ///@return    Read-only pointer to the file's htsFormat.
     pub fn hts_get_format(fp: *mut htsFile) -> *const htsFormat;
 }
 extern "C" {
-    ///@ abstract      Returns a string containing the file format extension.
-    ///@ param format  Format structure containing the file type.
-    ///@ return        A string ("sam", "bam", etc) or "?" for unknown formats.
     pub fn hts_format_file_extension(format: *const htsFormat) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    ///@abstract  Sets a specified CRAM option on the open file handle.
-    ///@param fp  The file handle open the open file.
-    ///@param opt The CRAM_OPT_* option.
-    ///@param ... Optional arguments, dependent on the option used.
-    ///@return    0 for success, or negative if an error occurred.
     pub fn hts_set_opt(fp: *mut htsFile, opt: hts_fmt_option, ...) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -1292,12 +666,6 @@ extern "C" {
     ) -> *mut *mut ::std::os::raw::c_char;
 }
 extern "C" {
-    ///@abstract       Parse comma-separated list or read list from a file
-    ///@param list     File name or comma-separated list
-    ///@param is_file
-    ///@param _n       Size of the output array (number of items read)
-    ///@return         NULL on failure or pointer to newly allocated array of
-    ///strings
     pub fn hts_readlist(
         fn_: *const ::std::os::raw::c_char,
         is_file: ::std::os::raw::c_int,
@@ -1305,127 +673,40 @@ extern "C" {
     ) -> *mut *mut ::std::os::raw::c_char;
 }
 extern "C" {
-    ///@abstract  Create extra threads to aid compress/decompression for this file
-    ///@param fp  The file handle
-    ///@param n   The number of worker threads to create
-    ///@return    0 for success, or negative if an error occurred.
-    ///@notes     This function creates non-shared threads for use solely by fp.
-    ///The hts_set_thread_pool function is the recommended alternative.
     pub fn hts_set_threads(fp: *mut htsFile, n: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///@abstract  Create extra threads to aid compress/decompression for this file
-    ///@param fp  The file handle
-    ///@param p   A pool of worker threads, previously allocated by hts_create_threads().
-    ///@return    0 for success, or negative if an error occurred.
     pub fn hts_set_thread_pool(fp: *mut htsFile, p: *mut htsThreadPool) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///@abstract  Adds a cache of decompressed blocks, potentially speeding up seeks.
-    ///This may not work for all file types (currently it is bgzf only).
-    ///@param fp  The file handle
-    ///@param n   The size of cache, in bytes
     pub fn hts_set_cache_size(fp: *mut htsFile, n: ::std::os::raw::c_int);
 }
 extern "C" {
-    ///@abstract  Set .fai filename for a file opened for reading
-    ///@return    0 for success, negative on failure
-    ///@discussion
-    ///Called before *_hdr_read(), this provides the name of a .fai file
-    ///used to provide a reference list if the htsFile contains no @SQ headers.
     pub fn hts_set_fai_filename(
         fp: *mut htsFile,
         fn_aux: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///@abstract  Determine whether a given htsFile contains a valid EOF block
-    ///@return    3 for a non-EOF checkable filetype;
-    ///2 for an unseekable file type where EOF cannot be checked;
-    ///1 for a valid EOF block;
-    ///0 for if the EOF marker is absent when it should be present;
-    ///-1 (with errno set) on failure
-    ///@discussion
-    ///Check if the BGZF end-of-file (EOF) marker is present
     pub fn hts_check_EOF(fp: *mut htsFile) -> ::std::os::raw::c_int;
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct __hts_idx_t {
+    _unused: [u8; 0],
+}
+pub type hts_idx_t = __hts_idx_t;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hts_pair32_t {
     pub beg: u32,
     pub end: u32,
 }
-#[test]
-fn bindgen_test_layout_hts_pair32_t() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_pair32_t>(),
-        8usize,
-        concat!("Size of: ", stringify!(hts_pair32_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_pair32_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(hts_pair32_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair32_t>())).beg as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair32_t),
-            "::",
-            stringify!(beg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair32_t>())).end as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair32_t),
-            "::",
-            stringify!(end)
-        )
-    );
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hts_pair64_t {
     pub u: u64,
     pub v: u64,
-}
-#[test]
-fn bindgen_test_layout_hts_pair64_t() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_pair64_t>(),
-        16usize,
-        concat!("Size of: ", stringify!(hts_pair64_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_pair64_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_pair64_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair64_t>())).u as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair64_t),
-            "::",
-            stringify!(u)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair64_t>())).v as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair64_t),
-            "::",
-            stringify!(v)
-        )
-    );
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1434,131 +715,15 @@ pub struct hts_pair64_max_t {
     pub v: u64,
     pub max: u64,
 }
-#[test]
-fn bindgen_test_layout_hts_pair64_max_t() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_pair64_max_t>(),
-        24usize,
-        concat!("Size of: ", stringify!(hts_pair64_max_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_pair64_max_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_pair64_max_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair64_max_t>())).u as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair64_max_t),
-            "::",
-            stringify!(u)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair64_max_t>())).v as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair64_max_t),
-            "::",
-            stringify!(v)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_pair64_max_t>())).max as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_pair64_max_t),
-            "::",
-            stringify!(max)
-        )
-    );
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hts_reglist_t {
     pub reg: *const ::std::os::raw::c_char,
-    pub intervals: *mut hts_pair32_t,
     pub tid: ::std::os::raw::c_int,
+    pub intervals: *mut hts_pair32_t,
     pub count: u32,
     pub min_beg: u32,
     pub max_end: u32,
-}
-#[test]
-fn bindgen_test_layout_hts_reglist_t() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_reglist_t>(),
-        32usize,
-        concat!("Size of: ", stringify!(hts_reglist_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_reglist_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_reglist_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_reglist_t>())).reg as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_reglist_t),
-            "::",
-            stringify!(reg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_reglist_t>())).intervals as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_reglist_t),
-            "::",
-            stringify!(intervals)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_reglist_t>())).tid as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_reglist_t),
-            "::",
-            stringify!(tid)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_reglist_t>())).count as *const _ as usize },
-        20usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_reglist_t),
-            "::",
-            stringify!(count)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_reglist_t>())).min_beg as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_reglist_t),
-            "::",
-            stringify!(min_beg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_reglist_t>())).max_end as *const _ as usize },
-        28usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_reglist_t),
-            "::",
-            stringify!(max_end)
-        )
-    );
 }
 pub type hts_readrec_func = ::std::option::Option<
     unsafe extern "C" fn(
@@ -1588,19 +753,12 @@ pub struct hts_itr_t {
     pub end: ::std::os::raw::c_int,
     pub n_off: ::std::os::raw::c_int,
     pub i: ::std::os::raw::c_int,
-    pub n_reg: ::std::os::raw::c_int,
-    pub reg_list: *mut hts_reglist_t,
     pub curr_tid: ::std::os::raw::c_int,
     pub curr_beg: ::std::os::raw::c_int,
     pub curr_end: ::std::os::raw::c_int,
-    pub curr_reg: ::std::os::raw::c_int,
-    pub curr_intv: ::std::os::raw::c_int,
     pub curr_off: u64,
-    pub nocoor_off: u64,
-    pub off: *mut hts_pair64_max_t,
+    pub off: *mut hts_pair64_t,
     pub readrec: hts_readrec_func,
-    pub seek: hts_seek_func,
-    pub tell: hts_tell_func,
     pub bins: hts_itr_t__bindgen_ty_1,
 }
 #[repr(C)]
@@ -1610,253 +768,107 @@ pub struct hts_itr_t__bindgen_ty_1 {
     pub m: ::std::os::raw::c_int,
     pub a: *mut ::std::os::raw::c_int,
 }
-#[test]
-fn bindgen_test_layout_hts_itr_t__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_itr_t__bindgen_ty_1>(),
-        16usize,
-        concat!("Size of: ", stringify!(hts_itr_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_itr_t__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_itr_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t__bindgen_ty_1>())).n as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t__bindgen_ty_1),
-            "::",
-            stringify!(n)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t__bindgen_ty_1>())).m as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t__bindgen_ty_1),
-            "::",
-            stringify!(m)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t__bindgen_ty_1>())).a as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t__bindgen_ty_1),
-            "::",
-            stringify!(a)
-        )
-    );
-}
-#[test]
-fn bindgen_test_layout_hts_itr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<hts_itr_t>(),
-        128usize,
-        concat!("Size of: ", stringify!(hts_itr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<hts_itr_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(hts_itr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).tid as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(tid)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).beg as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(beg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).end as *const _ as usize },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(end)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).n_off as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(n_off)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).i as *const _ as usize },
-        20usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(i)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).n_reg as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(n_reg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).reg_list as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(reg_list)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).curr_tid as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(curr_tid)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).curr_beg as *const _ as usize },
-        44usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(curr_beg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).curr_end as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(curr_end)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).curr_reg as *const _ as usize },
-        52usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(curr_reg)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).curr_intv as *const _ as usize },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(curr_intv)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).curr_off as *const _ as usize },
-        64usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(curr_off)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).nocoor_off as *const _ as usize },
-        72usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(nocoor_off)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).off as *const _ as usize },
-        80usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(off)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).readrec as *const _ as usize },
-        88usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(readrec)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).seek as *const _ as usize },
-        96usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(seek)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).tell as *const _ as usize },
-        104usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(tell)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<hts_itr_t>())).bins as *const _ as usize },
-        112usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(hts_itr_t),
-            "::",
-            stringify!(bins)
-        )
-    );
-}
 impl hts_itr_t {
+    #[inline]
+    pub fn read_rest(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_read_rest(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn finished(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_finished(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn is_cram(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_is_cram(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn dummy(&self) -> u32 {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 29u8) as u32) }
+    }
+    #[inline]
+    pub fn set_dummy(&mut self, val: u32) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(3usize, 29u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        read_rest: u32,
+        finished: u32,
+        is_cram: u32,
+        dummy: u32,
+    ) -> __BindgenBitfieldUnit<[u8; 4usize], u32> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize], u32> =
+            Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let read_rest: u32 = unsafe { ::std::mem::transmute(read_rest) };
+            read_rest as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let finished: u32 = unsafe { ::std::mem::transmute(finished) };
+            finished as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
+            let is_cram: u32 = unsafe { ::std::mem::transmute(is_cram) };
+            is_cram as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 29u8, {
+            let dummy: u32 = unsafe { ::std::mem::transmute(dummy) };
+            dummy as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct aux_key_t {
+    pub key: ::std::os::raw::c_int,
+    pub min_off: u64,
+    pub max_off: u64,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct hts_itr_multi_t {
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u32>,
+    pub reg_list: *mut hts_reglist_t,
+    pub n_reg: ::std::os::raw::c_int,
+    pub i: ::std::os::raw::c_int,
+    pub curr_tid: ::std::os::raw::c_int,
+    pub curr_intv: ::std::os::raw::c_int,
+    pub curr_beg: ::std::os::raw::c_int,
+    pub curr_end: ::std::os::raw::c_int,
+    pub curr_reg: ::std::os::raw::c_int,
+    pub off: *mut hts_pair64_max_t,
+    pub n_off: ::std::os::raw::c_int,
+    pub curr_off: u64,
+    pub nocoor_off: u64,
+    pub readrec: hts_readrec_func,
+    pub seek: hts_seek_func,
+    pub tell: hts_tell_func,
+}
+impl hts_itr_multi_t {
     #[inline]
     pub fn read_rest(&self) -> u32 {
         unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
@@ -1902,25 +914,14 @@ impl hts_itr_t {
         }
     }
     #[inline]
-    pub fn multi(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_multi(&mut self, val: u32) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
     pub fn dummy(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 27u8) as u32) }
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 28u8) as u32) }
     }
     #[inline]
     pub fn set_dummy(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(5usize, 27u8, val as u64)
+            self._bitfield_1.set(4usize, 28u8, val as u64)
         }
     }
     #[inline]
@@ -1929,7 +930,6 @@ impl hts_itr_t {
         finished: u32,
         is_cram: u32,
         nocoor: u32,
-        multi: u32,
         dummy: u32,
     ) -> __BindgenBitfieldUnit<[u8; 4usize], u32> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize], u32> =
@@ -1950,77 +950,14 @@ impl hts_itr_t {
             let nocoor: u32 = unsafe { ::std::mem::transmute(nocoor) };
             nocoor as u64
         });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let multi: u32 = unsafe { ::std::mem::transmute(multi) };
-            multi as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 27u8, {
+        __bindgen_bitfield_unit.set(4usize, 28u8, {
             let dummy: u32 = unsafe { ::std::mem::transmute(dummy) };
             dummy as u64
         });
         __bindgen_bitfield_unit
     }
 }
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct aux_key_t {
-    pub key: ::std::os::raw::c_int,
-    pub min_off: u64,
-    pub max_off: u64,
-}
-#[test]
-fn bindgen_test_layout_aux_key_t() {
-    assert_eq!(
-        ::std::mem::size_of::<aux_key_t>(),
-        24usize,
-        concat!("Size of: ", stringify!(aux_key_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<aux_key_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(aux_key_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<aux_key_t>())).key as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(aux_key_t),
-            "::",
-            stringify!(key)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<aux_key_t>())).min_off as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(aux_key_t),
-            "::",
-            stringify!(min_off)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<aux_key_t>())).max_off as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(aux_key_t),
-            "::",
-            stringify!(max_off)
-        )
-    );
-}
-pub type hts_itr_multi_t = hts_itr_t;
 extern "C" {
-    /// Create a BAI/CSI/TBI type index structure
-    ///** @param n          Initial number of targets
-    ///@param fmt        Format, one of HTS_FMT_CSI, HTS_FMT_BAI or HTS_FMT_TBI
-    ///@param offset0    Initial file offset
-    ///@param min_shift  Number of bits for the minimal interval
-    ///@param n_lvls     Number of levels in the binning index
-    ///@return An initialised hts_idx_t struct on success; NULL on failure
-    ///*/
     pub fn hts_idx_init(
         n: ::std::os::raw::c_int,
         fmt: ::std::os::raw::c_int,
@@ -2030,24 +967,9 @@ extern "C" {
     ) -> *mut hts_idx_t;
 }
 extern "C" {
-    /// Free a BAI/CSI/TBI type index
-    ///** @param idx   Index structure to free
-    ///*/
     pub fn hts_idx_destroy(idx: *mut hts_idx_t);
 }
 extern "C" {
-    /// Push an index entry
-    ///** @param idx        Index
-    ///@param tid        Target id
-    ///@param beg        Range start (zero-based)
-    ///@param end        Range end (zero-based, half-open)
-    ///@param offset     File offset
-    ///@param is_mapped  Range corresponds to a mapped read
-    ///@return 0 on success; -1 on failure
-    ///
-    ///The @p is_mapped parameter is used to update the n_mapped / n_unmapped counts
-    ///stored in the meta-data bin.
-    ///*/
     pub fn hts_idx_push(
         idx: *mut hts_idx_t,
         tid: ::std::os::raw::c_int,
@@ -2058,40 +980,9 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Finish building an index
-    ///** @param idx          Index
-    ///@param final_offset Last file offset
-    ///@return 0 on success; non-zero on failure.
-    ///*/
-    pub fn hts_idx_finish(idx: *mut hts_idx_t, final_offset: u64) -> ::std::os::raw::c_int;
+    pub fn hts_idx_finish(idx: *mut hts_idx_t, final_offset: u64);
 }
 extern "C" {
-    /// Returns index format
-    ///** @param idx   Index
-    ///@return One of HTS_FMT_CSI, HTS_FMT_BAI or HTS_FMT_TBI
-    ///*/
-    pub fn hts_idx_fmt(idx: *mut hts_idx_t) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Add name to TBI index meta-data
-    ///** @param idx   Index
-    ///@param tid   Target identifier
-    ///@param name  Target name
-    ///@return Index number of name in names list on success; -1 on failure.
-    ///*/
-    pub fn hts_idx_tbi_name(
-        idx: *mut hts_idx_t,
-        tid: ::std::os::raw::c_int,
-        name: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Save an index to a file
-    ///** @param idx  Index to be written
-    ///@param fn   Input BAM/BCF/etc filename, to which .bai/.csi/etc will be added
-    ///@param fmt  One of the HTS_FMT_* index formats
-    ///@return  0 if successful, or negative if an error occurred.
-    ///*/
     pub fn hts_idx_save(
         idx: *const hts_idx_t,
         fn_: *const ::std::os::raw::c_char,
@@ -2099,13 +990,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Save an index to a specific file
-    ///** @param idx    Index to be written
-    ///@param fn     Input BAM/BCF/etc filename
-    ///@param fnidx  Output filename, or NULL to add .bai/.csi/etc to @a fn
-    ///@param fmt    One of the HTS_FMT_* index formats
-    ///@return  0 if successful, or negative if an error occurred.
-    ///*/
     pub fn hts_idx_save_as(
         idx: *const hts_idx_t,
         fn_: *const ::std::os::raw::c_char,
@@ -2114,110 +998,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Load an index file
-    ///** @param fn   BAM/BCF/etc filename, to which .bai/.csi/etc will be added or
-    ///the extension substituted, to search for an existing index file.
-    ///In case of a non-standard naming, the file name can include the
-    ///name of the index file delimited with HTS_IDX_DELIM.
-    ///@param fmt  One of the HTS_FMT_* index formats
-    ///@return  The index, or NULL if an error occurred.
-    ///
-    ///If @p fn contains the string "##idx##" (HTS_IDX_DELIM), the part before
-    ///the delimiter will be used as the name of the data file and the part after
-    ///it will be used as the name of the index.
-    ///
-    ///Otherwise, this function tries to work out the index name as follows:
-    ///
-    ///It will try appending ".csi" to @p fn
-    ///It will try substituting an existing suffix (e.g. .bam, .vcf) with ".csi"
-    ///Then, if @p fmt is HTS_FMT_BAI:
-    ///It will try appending ".bai" to @p fn
-    ///To will substituting the existing suffix (e.g. .bam) with ".bai"
-    ///else if @p fmt is HTS_FMT_TBI:
-    ///It will try appending ".tbi" to @p fn
-    ///To will substituting the existing suffix (e.g. .vcf) with ".tbi"
-    ///
-    ///If the index file is remote (served over a protocol like https), first a check
-    ///is made to see is a locally cached copy is available.  This is done for all
-    ///of the possible names listed above.  If a cached copy is not available then
-    ///the index will be downloaded and stored in the current working directory,
-    ///with the same name as the remote index.
-    ///
-    ///Equivalent to hts_idx_load3(fn, NULL, fmt, HTS_IDX_SAVE_REMOTE);
-    ///*/
     pub fn hts_idx_load(
         fn_: *const ::std::os::raw::c_char,
         fmt: ::std::os::raw::c_int,
     ) -> *mut hts_idx_t;
 }
 extern "C" {
-    /// Load a specific index file
-    ///** @param fn     Input BAM/BCF/etc filename
-    ///@param fnidx  The input index filename
-    ///@return  The index, or NULL if an error occurred.
-    ///
-    ///Equivalent to hts_idx_load3(fn, fnidx, 0, 0);
-    ///
-    ///This function will not attempt to save index files locally.
-    ///*/
     pub fn hts_idx_load2(
         fn_: *const ::std::os::raw::c_char,
         fnidx: *const ::std::os::raw::c_char,
     ) -> *mut hts_idx_t;
 }
 extern "C" {
-    /// Load a specific index file
-    ///** @param fn     Input BAM/BCF/etc filename
-    ///@param fnidx  The input index filename
-    ///@param fmt    One of the HTS_FMT_* index formats
-    ///@param flags  Flags to alter behaviour (see description)
-    ///@return  The index, or NULL if an error occurred.
-    ///
-    ///If @p fnidx is NULL, the index name will be derived from @p fn in the
-    ///same way as hts_idx_load().
-    ///
-    ///If @p fnidx is not NULL, @p fmt is ignored.
-    ///
-    ///The @p flags parameter can be set to a combination of the following
-    ///values:
-    ///
-    ///HTS_IDX_SAVE_REMOTE   Save a local copy of any remote indexes
-    ///HTS_IDX_SILENT_FAIL   Fail silently if the index is not present
-    ///*/
-    pub fn hts_idx_load3(
-        fn_: *const ::std::os::raw::c_char,
-        fnidx: *const ::std::os::raw::c_char,
-        fmt: ::std::os::raw::c_int,
-        flags: ::std::os::raw::c_int,
-    ) -> *mut hts_idx_t;
-}
-extern "C" {
-    /// Get extra index meta-data
-    ///** @param idx    The index
-    ///@param l_meta Pointer to where the length of the extra data is stored
-    ///@return Pointer to the extra data if present; NULL otherwise
-    ///
-    ///Indexes (both .tbi and .csi) made by tabix include extra data about
-    ///the indexed file.  The returns a pointer to this data.  Note that the
-    ///data is stored exactly as it is in the index.  Callers need to interpret
-    ///the results themselves, including knowing what sort of data to expect;
-    ///byte swapping etc.
-    ///*/
     pub fn hts_idx_get_meta(idx: *mut hts_idx_t, l_meta: *mut u32) -> *mut u8;
 }
 extern "C" {
-    /// Set extra index meta-data
-    ///** @param idx     The index
-    ///@param l_meta  Length of data
-    ///@param meta    Pointer to the extra data
-    ///@param is_copy If not zero, a copy of the data is taken
-    ///@return 0 on success; -1 on failure (out of memory).
-    ///
-    ///Sets the data that is returned by hts_idx_get_meta().
-    ///
-    ///If is_copy != 0, a copy of the input data is taken.  If not, ownership of
-    ///the data pointed to by *meta passes to the index.
-    ///*/
     pub fn hts_idx_set_meta(
         idx: *mut hts_idx_t,
         l_meta: u32,
@@ -2226,20 +1021,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get number of mapped and unmapped reads from an index
-    ///** @param      idx      Index
-    ///@param      tid      Target ID
-    ///@param[out] mapped   Location to store number of mapped reads
-    ///@param[out] unmapped Location to store number of unmapped reads
-    ///@return 0 on success; -1 on failure (data not available)
-    ///
-    ///BAI and CSI indexes store information on the number of reads for each
-    ///target that were mapped or unmapped (unmapped reads will generally have
-    ///a paired read that is mapped to the target).  This function returns this
-    ///infomation if it is available.
-    ///
-    ///@note Cram CRAI indexes do not include this information.
-    ///*/
     pub fn hts_idx_get_stat(
         idx: *const hts_idx_t,
         tid: ::std::os::raw::c_int,
@@ -2248,41 +1029,34 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return the number of unplaced reads from an index
-    ///** @param idx    Index
-    ///@return Unplaced reads count
-    ///
-    ///Unplaced reads are not linked to any reference (e.g. RNAME is '*' in SAM
-    ///files).
-    ///*/
     pub fn hts_idx_get_n_no_coor(idx: *const hts_idx_t) -> u64;
 }
 extern "C" {
-    /// Parse a numeric string
-    ///** The number may be expressed in scientific notation, and optionally may
-    ///contain commas in the integer part (before any decimal point or E notation).
-    ///@param str     String to be parsed
-    ///@param strend  If non-NULL, set on return to point to the first character
-    ///in @a str after those forming the parsed number
-    ///@param flags   Or'ed-together combination of HTS_PARSE_* flags
-    ///@return  Converted value of the parsed number.
-    ///
-    ///When @a strend is NULL, a warning will be printed (if hts_verbose is HTS_LOG_WARNING
-    ///or more) if there are any trailing characters after the number.
-    ///*/
     pub fn hts_parse_decimal(
         str: *const ::std::os::raw::c_char,
         strend: *mut *mut ::std::os::raw::c_char,
         flags: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_longlong;
 }
-/// Parse a "CHR:START-END"-style region string
-///** @param str  String to be parsed
-///@param beg  Set on return to the 0-based start of the region
-///@param end  Set on return to the 1-based end of the region
-///@return  Pointer to the colon or '\0' after the reference sequence name,
-///or NULL if @a str could not be parsed.
-///*/
+extern "C" {
+    pub fn hts_parse_reg(
+        str: *const ::std::os::raw::c_char,
+        beg: *mut ::std::os::raw::c_int,
+        end: *mut ::std::os::raw::c_int,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn hts_itr_query(
+        idx: *const hts_idx_t,
+        tid: ::std::os::raw::c_int,
+        beg: ::std::os::raw::c_int,
+        end: ::std::os::raw::c_int,
+        readrec: hts_readrec_func,
+    ) -> *mut hts_itr_t;
+}
+extern "C" {
+    pub fn hts_itr_destroy(iter: *mut hts_itr_t);
+}
 pub type hts_name2id_f = ::std::option::Option<
     unsafe extern "C" fn(
         arg1: *mut ::std::os::raw::c_void,
@@ -2295,108 +1069,6 @@ pub type hts_id2name_f = ::std::option::Option<
         arg2: ::std::os::raw::c_int,
     ) -> *const ::std::os::raw::c_char,
 >;
-extern "C" {
-    pub fn hts_parse_reg(
-        str: *const ::std::os::raw::c_char,
-        beg: *mut ::std::os::raw::c_int,
-        end: *mut ::std::os::raw::c_int,
-    ) -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    /// Parse a "CHR:START-END"-style region string
-    ///** @param str   String to be parsed
-    ///@param tid   Set on return (if not NULL) to be reference index (-1 if invalid)
-    ///@param beg   Set on return to the 0-based start of the region
-    ///@param end   Set on return to the 1-based end of the region
-    ///@param getid Function pointer.  Called if not NULL to set tid.
-    ///@param hdr   Caller data passed to getid.
-    ///@param flags Bitwise HTS_PARSE_* flags listed above.
-    ///@return      Pointer to the byte after the end of the entire region
-    ///specifier (including any trailing comma) on success,
-    ///or NULL if @a str could not be parsed.
-    ///
-    ///A variant of hts_parse_reg which is reference-id aware.  It uses
-    ///the iterator name2id callbacks to validate the region tokenisation works.
-    ///
-    ///This is necessary due to GRCh38 HLA additions which have reference names
-    ///like "HLA-DRB1*12:17".
-    ///
-    ///To work around ambiguous parsing issues, eg both "chr1" and "chr1:100-200"
-    ///are reference names, quote using curly braces.
-    ///Thus "{chr1}:100-200" and "{chr1:100-200}" disambiguate the above example.
-    ///
-    ///Flags are used to control how parsing works, and can be one of the below.
-    ///
-    ///HTS_PARSE_THOUSANDS_SEP:
-    ///Ignore commas in numbers.  For example with this flag 1,234,567
-    ///is interpreted as 1234567.
-    ///
-    ///HTS_PARSE_LIST:
-    ///If present, the region is assmed to be a comma separated list and
-    ///position parsing will not contain commas (this implicitly
-    ///clears HTS_PARSE_THOUSANDS_SEP in the call to hts_parse_decimal).
-    ///On success the return pointer will be the start of the next region, ie
-    ///the character after the comma.  (If *ret != '\0' then the caller can
-    ///assume another region is present in the list.)
-    ///
-    ///If not set then positions may contain commas.  In this case the return
-    ///value should point to the end of the string, or NULL on failure.
-    ///
-    ///HTS_PARSE_ONE_COORD:
-    ///If present, X:100 is treated as the single base pair region X:100-100.
-    ///In this case X:-100 is shorthand for X:1-100 and X:100- is X:100-<end>.
-    ///(This is the standard bcftools region convention.)
-    ///
-    ///When not set X:100 is considered to be X:100-<end> where <end> is
-    ///the end of chromosome X (set to INT_MAX here).  X:100- and X:-100 are
-    ///invalid.
-    ///(This is the standard samtools region convention.)
-    ///
-    ///Note the supplied string expects 1 based inclusive coordinates, but the
-    ///returned coordinates start from 0 and are half open, so pos0 is valid
-    ///for use in e.g. "for (pos0 = beg; pos0 < end; pos0++) {...}"
-    ///
-    ///If NULL is returned, the value in tid mat give additional information
-    ///about the error:
-    ///
-    ///-2   Failed to parse @p hdr; or out of memory
-    ///-1   The reference in @p str has mismatched braces, or does not
-    ///exist in @p hdr
-    ///>= 0 The specified range in @p str could not be parsed
-    ///*/
-    pub fn hts_parse_region(
-        str: *const ::std::os::raw::c_char,
-        tid: *mut ::std::os::raw::c_int,
-        beg: *mut i64,
-        end: *mut i64,
-        getid: hts_name2id_f,
-        hdr: *mut ::std::os::raw::c_void,
-        flags: ::std::os::raw::c_int,
-    ) -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    /// Create a single-region iterator
-    ///** @param idx      Index
-    ///@param tid      Target ID
-    ///@param beg      Start of region
-    ///@param end      End of region
-    ///@param readrec  Callback to read a record from the input file
-    ///@return An iterator on success; NULL on failure
-    ///*/
-    pub fn hts_itr_query(
-        idx: *const hts_idx_t,
-        tid: ::std::os::raw::c_int,
-        beg: ::std::os::raw::c_int,
-        end: ::std::os::raw::c_int,
-        readrec: hts_readrec_func,
-    ) -> *mut hts_itr_t;
-}
-extern "C" {
-    /// Free an iterator
-    ///** @param iter   Iterator to free
-    ///*/
-    pub fn hts_itr_destroy(iter: *mut hts_itr_t);
-}
 pub type hts_itr_query_func = ::std::option::Option<
     unsafe extern "C" fn(
         idx: *const hts_idx_t,
@@ -2407,16 +1079,6 @@ pub type hts_itr_query_func = ::std::option::Option<
     ) -> *mut hts_itr_t,
 >;
 extern "C" {
-    /// Create a single-region iterator from a text region specification
-    ///** @param idx       Index
-    ///@param reg       Region specifier
-    ///@param getid     Callback function to return the target ID for a name
-    ///@param hdr       Input file header
-    ///@param itr_query Callback function returning an iterator for a numeric tid,
-    ///start and end position
-    ///@param readrec   Callback to read a record from the input file
-    ///@return An iterator on success; NULL on error
-    ///*/
     pub fn hts_itr_querys(
         idx: *const hts_idx_t,
         reg: *const ::std::os::raw::c_char,
@@ -2427,13 +1089,6 @@ extern "C" {
     ) -> *mut hts_itr_t;
 }
 extern "C" {
-    /// Return the next record from an iterator
-    ///** @param fp      Input file handle
-    ///@param iter    Iterator
-    ///@param r       Pointer to record placeholder
-    ///@param data    Data passed to the readrec callback
-    ///@return >= 0 on success, -1 when there is no more data, < -1 on error
-    ///*/
     pub fn hts_itr_next(
         fp: *mut BGZF,
         iter: *mut hts_itr_t,
@@ -2442,16 +1097,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return a list of target names from an index
-    ///** @param      idx    Index
-    ///@param[out] n      Location to store the number of targets
-    ///@param      getid  Callback function to get the name for a target ID
-    ///@param      hdr    Header from indexed file
-    ///@return An array of pointers to the names on success; NULL on failure
-    ///
-    ///@note The names are pointers into the header data structure.  When cleaning
-    ///up, only the array should be freed, not the names.
-    ///*/
     pub fn hts_idx_seqnames(
         idx: *const hts_idx_t,
         n: *mut ::std::os::raw::c_int,
@@ -2459,30 +1104,22 @@ extern "C" {
         hdr: *mut ::std::os::raw::c_void,
     ) -> *mut *const ::std::os::raw::c_char;
 }
-/// Iterator with multiple regions *
 pub type hts_itr_multi_query_func = ::std::option::Option<
-    unsafe extern "C" fn(idx: *const hts_idx_t, itr: *mut hts_itr_t) -> ::std::os::raw::c_int,
+    unsafe extern "C" fn(idx: *const hts_idx_t, itr: *mut hts_itr_multi_t) -> *mut hts_itr_multi_t,
 >;
 extern "C" {
-    pub fn hts_itr_multi_bam(idx: *const hts_idx_t, iter: *mut hts_itr_t) -> ::std::os::raw::c_int;
+    pub fn hts_itr_multi_bam(
+        idx: *const hts_idx_t,
+        iter: *mut hts_itr_multi_t,
+    ) -> *mut hts_itr_multi_t;
 }
 extern "C" {
-    pub fn hts_itr_multi_cram(idx: *const hts_idx_t, iter: *mut hts_itr_t)
-        -> ::std::os::raw::c_int;
+    pub fn hts_itr_multi_cram(
+        idx: *const hts_idx_t,
+        iter: *mut hts_itr_multi_t,
+    ) -> *mut hts_itr_multi_t;
 }
 extern "C" {
-    /// Create a multi-region iterator from a region list
-    ///** @param idx          Index
-    ///@param reglist      Region list
-    ///@param count        Number of items in region list
-    ///@param getid        Callback to convert names to target IDs
-    ///@param hdr          Indexed file header (passed to getid)
-    ///@param itr_specific Filetype-specific callback function
-    ///@param readrec      Callback to read an input file record
-    ///@param seek         Callback to seek in the input file
-    ///@param tell         Callback to return current input file location
-    ///@return An iterator on success; NULL on failure
-    ///*/
     pub fn hts_itr_regions(
         idx: *const hts_idx_t,
         reglist: *mut hts_reglist_t,
@@ -2493,49 +1130,24 @@ extern "C" {
         readrec: hts_readrec_func,
         seek: hts_seek_func,
         tell: hts_tell_func,
-    ) -> *mut hts_itr_t;
+    ) -> *mut hts_itr_multi_t;
 }
 extern "C" {
-    /// Return the next record from an iterator
-    ///** @param fp      Input file handle
-    ///@param iter    Iterator
-    ///@param r       Pointer to record placeholder
-    ///@return >= 0 on success, -1 when there is no more data, < -1 on error
-    ///*/
     pub fn hts_itr_multi_next(
         fd: *mut htsFile,
-        iter: *mut hts_itr_t,
+        iter: *mut hts_itr_multi_t,
         r: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Create a region list from a char array
-    ///** @param argv      Char array of target:interval elements, e.g. chr1:2500-3600, chr1:5100, chr2
-    ///@param argc      Number of items in the array
-    ///@param r_count   Pointer to the number of items in the resulting region list
-    ///@param hdr       Header for the sam/bam/cram file
-    ///@param getid     Callback to convert target names to target ids.
-    ///@return  A region list on success, NULL on failure
-    ///*/
-    pub fn hts_reglist_create(
-        argv: *mut *mut ::std::os::raw::c_char,
-        argc: ::std::os::raw::c_int,
-        r_count: *mut ::std::os::raw::c_int,
-        hdr: *mut ::std::os::raw::c_void,
-        getid: hts_name2id_f,
-    ) -> *mut hts_reglist_t;
+    pub fn hts_reglist_free(reglist: *mut hts_reglist_t, count: ::std::os::raw::c_int);
 }
 extern "C" {
-    /// Free a region list
-    ///** @param reglist    Region list
-    ///@param count      Number of items in the list
-    ///*/
-    pub fn hts_reglist_free(reglist: *mut hts_reglist_t, count: ::std::os::raw::c_int);
+    pub fn hts_itr_multi_destroy(iter: *mut hts_itr_multi_t);
 }
 extern "C" {
     pub fn hts_file_type(fname: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
-/// Revised MAQ error model *
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct errmod_t {
@@ -2556,8 +1168,6 @@ extern "C" {
         q: *mut f32,
     ) -> ::std::os::raw::c_int;
 }
-/// Probabilistic banded glocal alignment             *
-/// See https://doi.org/10.1093/bioinformatics/btr076 *
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct probaln_par_t {
@@ -2565,73 +1175,7 @@ pub struct probaln_par_t {
     pub e: f32,
     pub bw: ::std::os::raw::c_int,
 }
-#[test]
-fn bindgen_test_layout_probaln_par_t() {
-    assert_eq!(
-        ::std::mem::size_of::<probaln_par_t>(),
-        12usize,
-        concat!("Size of: ", stringify!(probaln_par_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<probaln_par_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(probaln_par_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<probaln_par_t>())).d as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(probaln_par_t),
-            "::",
-            stringify!(d)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<probaln_par_t>())).e as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(probaln_par_t),
-            "::",
-            stringify!(e)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<probaln_par_t>())).bw as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(probaln_par_t),
-            "::",
-            stringify!(bw)
-        )
-    );
-}
 extern "C" {
-    /// Perform probabilistic banded glocal alignment
-    ///** @param      ref     Reference sequence
-    ///@param      l_ref   Length of reference
-    ///@param      query   Query sequence
-    ///@param      l_query Length of query sequence
-    ///@param      iqual   Query base qualities
-    ///@param      c       Alignment parameters
-    ///@param[out] state   Output alignment
-    ///@param[out] q    Phred scaled posterior probability of state[i] being wrong
-    ///@return     Phred-scaled likelihood score, or INT_MIN on failure.
-    ///
-    ///The reference and query sequences are coded using integers 0,1,2,3,4 for
-    ///bases A,C,G,T,N respectively (N here is for any ambiguity code).
-    ///
-    ///On output, state and q are arrays of length l_query. The higher 30
-    ///bits give the reference position the query base is matched to and the
-    ///lower two bits can be 0 (an alignment match) or 1 (an
-    ///insertion). q[i] gives the phred scaled posterior probability of
-    ///state[i] being wrong.
-    ///
-    ///On failure, errno will be set to EINVAL if the values of l_ref or l_query
-    ///were invalid; or ENOMEM if a memory allocation failed.
-    ///*/
     pub fn probaln_glocal(
         ref_: *const u8,
         l_ref: ::std::os::raw::c_int,
@@ -2643,30 +1187,15 @@ extern "C" {
         q: *mut u8,
     ) -> ::std::os::raw::c_int;
 }
-/// MD5 implementation *
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hts_md5_context {
     _unused: [u8; 0],
 }
 extern "C" {
-    /// @abstract   Intialises an MD5 context.
-    ///  @discussion
-    ///    The expected use is to allocate an hts_md5_context using
-    ///    hts_md5_init().  This pointer is then passed into one or more calls
-    ///    of hts_md5_update() to compute successive internal portions of the
-    ///    MD5 sum, which can then be externalised as a full 16-byte MD5sum
-    ///    calculation by calling hts_md5_final().  This can then be turned
-    ///    into ASCII via hts_md5_hex().
-    ///
-    ///    To dealloate any resources created by hts_md5_init() call the
-    ///    hts_md5_destroy() function.
-    ///
-    ///  @return     hts_md5_context pointer on success, NULL otherwise.
     pub fn hts_md5_init() -> *mut hts_md5_context;
 }
 extern "C" {
-    /// @abstract Updates the context with the MD5 of the data.
     pub fn hts_md5_update(
         ctx: *mut hts_md5_context,
         data: *const ::std::os::raw::c_void,
@@ -2674,192 +1203,29 @@ extern "C" {
     );
 }
 extern "C" {
-    /// @abstract Computes the final 128-bit MD5 hash from the given context
     pub fn hts_md5_final(digest: *mut ::std::os::raw::c_uchar, ctx: *mut hts_md5_context);
 }
 extern "C" {
-    /// @abstract Resets an md5_context to the initial state, as returned
-    ///            by hts_md5_init().
     pub fn hts_md5_reset(ctx: *mut hts_md5_context);
 }
 extern "C" {
-    /// @abstract Converts a 128-bit MD5 hash into a 33-byte nul-termninated
-    ///            hex string.
     pub fn hts_md5_hex(hex: *mut ::std::os::raw::c_char, digest: *const ::std::os::raw::c_uchar);
 }
 extern "C" {
-    /// @abstract Deallocates any memory allocated by hts_md5_init.
     pub fn hts_md5_destroy(ctx: *mut hts_md5_context);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct sam_hrecs_t {
-    _unused: [u8; 0],
-}
-/// @typedef
-///@abstract Structure for the alignment header.
-///@field n_targets   number of reference sequences
-///@field l_text      length of the plain text in the header (may be zero if
-///the header has been edited)
-///@field target_len  lengths of the reference sequences
-///@field target_name names of the reference sequences
-///@field text        plain text (may be NULL if the header has been edited)
-///@field sdict       header dictionary
-///@field hrecs       pointer to the extended header struct (internal use only)
-///@field ref_count   reference count
-///
-///@note The text and l_text fields are included for backwards compatibility.
-///These fields may be set to NULL and zero respectively as a side-effect
-///of calling some header API functions.  New code that needs to access the
-///header text should use the sam_hdr_str() and sam_hdr_length() functions
-///instead of these fields.
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct sam_hdr_t {
+pub struct bam_hdr_t {
     pub n_targets: i32,
     pub ignore_sam_err: i32,
-    pub l_text: usize,
+    pub l_text: u32,
     pub target_len: *mut u32,
-    pub cigar_tab: *const i8,
+    pub cigar_tab: *mut i8,
     pub target_name: *mut *mut ::std::os::raw::c_char,
     pub text: *mut ::std::os::raw::c_char,
     pub sdict: *mut ::std::os::raw::c_void,
-    pub hrecs: *mut sam_hrecs_t,
-    pub ref_count: u32,
 }
-#[test]
-fn bindgen_test_layout_sam_hdr_t() {
-    assert_eq!(
-        ::std::mem::size_of::<sam_hdr_t>(),
-        72usize,
-        concat!("Size of: ", stringify!(sam_hdr_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<sam_hdr_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(sam_hdr_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).n_targets as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(n_targets)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).ignore_sam_err as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(ignore_sam_err)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).l_text as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(l_text)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).target_len as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(target_len)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).cigar_tab as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(cigar_tab)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).target_name as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(target_name)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).text as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(text)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).sdict as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(sdict)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).hrecs as *const _ as usize },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(hrecs)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sam_hdr_t>())).ref_count as *const _ as usize },
-        64usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(sam_hdr_t),
-            "::",
-            stringify!(ref_count)
-        )
-    );
-}
-/// @typedef
-/// @abstract Old name for compatibility with existing code.
-pub type bam_hdr_t = sam_hdr_t;
-extern "C" {
-    #[link_name = "\u{1}bam_cigar_table"]
-    pub static mut bam_cigar_table: [i8; 256usize];
-}
-/// @typedef
-///@abstract Structure for core alignment information.
-///@field  tid     chromosome ID, defined by sam_hdr_t
-///@field  pos     0-based leftmost coordinate
-///@field  bin     bin calculated by bam_reg2bin()
-///@field  qual    mapping quality
-///@field  l_qname length of the query name
-///@field  flag    bitwise flag
-///@field  l_extranul length of extra NULs between qname & cigar (for alignment)
-///@field  n_cigar number of CIGAR operations
-///@field  l_qseq  length of the query sequence (read)
-///@field  mtid    chromosome ID of next read in template, defined by sam_hdr_t
-///@field  mpos    0-based leftmost coordinate of next read in template
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct bam1_core_t {
@@ -2867,169 +1233,16 @@ pub struct bam1_core_t {
     pub pos: i32,
     pub bin: u16,
     pub qual: u8,
-    pub l_extranul: u8,
+    pub l_qname: u8,
     pub flag: u16,
-    pub l_qname: u16,
+    pub unused1: u8,
+    pub l_extranul: u8,
     pub n_cigar: u32,
     pub l_qseq: i32,
     pub mtid: i32,
     pub mpos: i32,
     pub isize: i32,
 }
-#[test]
-fn bindgen_test_layout_bam1_core_t() {
-    assert_eq!(
-        ::std::mem::size_of::<bam1_core_t>(),
-        36usize,
-        concat!("Size of: ", stringify!(bam1_core_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<bam1_core_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(bam1_core_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).tid as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(tid)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).pos as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(pos)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).bin as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(bin)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).qual as *const _ as usize },
-        10usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(qual)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).l_extranul as *const _ as usize },
-        11usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(l_extranul)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).flag as *const _ as usize },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(flag)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).l_qname as *const _ as usize },
-        14usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(l_qname)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).n_cigar as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(n_cigar)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).l_qseq as *const _ as usize },
-        20usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(l_qseq)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).mtid as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(mtid)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).mpos as *const _ as usize },
-        28usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(mpos)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_core_t>())).isize as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_core_t),
-            "::",
-            stringify!(isize)
-        )
-    );
-}
-/// @typedef
-///@abstract Structure for one alignment.
-///@field  core       core information about the alignment
-///@field  l_data     current length of bam1_t::data
-///@field  m_data     maximum length of bam1_t::data
-///@field  data       all variable-length data, concatenated; structure: qname-cigar-seq-qual-aux
-///
-///@discussion Notes:
-///
-///1. The data blob should be accessed using bam_get_qname, bam_get_cigar,
-///bam_get_seq, bam_get_qual and bam_get_aux macros.  These returns pointers
-///to the start of each type of data.
-///2. qname is terminated by one to four NULs, so that the following
-///cigar data is 32-bit aligned; core.l_qname includes these trailing NULs,
-///while core.l_extranul counts the excess NULs (so 0 <= l_extranul <= 3).
-///3. Cigar data is encoded 4 bytes per CIGAR operation.
-///See the bam_cigar_* macros for manipulation.
-///4. seq is nibble-encoded according to bam_nt16_table.
-///See the bam_seqi macro for retrieving individual bases.
-///5. Per base qualilties are stored in the Phred scale with no +33 offset.
-///Ie as per the BAM specification and not the SAM ASCII printable method.
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct bam1_t {
@@ -3039,767 +1252,70 @@ pub struct bam1_t {
     pub data: *mut u8,
     pub id: u64,
 }
-#[test]
-fn bindgen_test_layout_bam1_t() {
-    assert_eq!(
-        ::std::mem::size_of::<bam1_t>(),
-        64usize,
-        concat!("Size of: ", stringify!(bam1_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<bam1_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(bam1_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_t>())).core as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_t),
-            "::",
-            stringify!(core)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_t>())).l_data as *const _ as usize },
-        36usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_t),
-            "::",
-            stringify!(l_data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_t>())).m_data as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_t),
-            "::",
-            stringify!(m_data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_t>())).data as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_t),
-            "::",
-            stringify!(data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam1_t>())).id as *const _ as usize },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam1_t),
-            "::",
-            stringify!(id)
-        )
-    );
+extern "C" {
+    pub fn bam_hdr_init() -> *mut bam_hdr_t;
 }
 extern "C" {
-    /// Generates a new unpopulated header structure.
-    ///*!
-    ///*
-    ///* @return  A valid pointer to new header on success, NULL on failure
-    ///*/
-    pub fn sam_hdr_init() -> *mut sam_hdr_t;
+    pub fn bam_hdr_read(fp: *mut BGZF) -> *mut bam_hdr_t;
 }
 extern "C" {
-    /// Read the header from a BAM compressed file.
-    ///*!
-    ///* @param fp  File pointer
-    ///* @return    A valid pointer to new header on success, NULL on failure
-    ///*
-    ///* This function only works with BAM files.  It is usually better to use
-    ///* sam_hdr_read(), which works on SAM, BAM and CRAM files.
-    ///*/
-    pub fn bam_hdr_read(fp: *mut BGZF) -> *mut sam_hdr_t;
+    pub fn bam_hdr_write(fp: *mut BGZF, h: *const bam_hdr_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Writes the header to a BAM file.
-    ///*!
-    ///* @param fp  File pointer
-    ///* @param h   Header pointer
-    ///* @return    0 on success, -1 on failure
-    ///*
-    ///* This function only works with BAM files.  Use sam_hdr_write() to
-    ///* write in any of the SAM, BAM or CRAM formats.
-    ///*/
-    pub fn bam_hdr_write(fp: *mut BGZF, h: *const sam_hdr_t) -> ::std::os::raw::c_int;
+    pub fn bam_hdr_destroy(h: *mut bam_hdr_t);
 }
 extern "C" {
-    /// Frees the resources associated with a header.
-    pub fn sam_hdr_destroy(h: *mut sam_hdr_t);
-}
-extern "C" {
-    /// Duplicate a header structure.
-    ///*!
-    ///* @return  A valid pointer to new header on success, NULL on failure
-    ///*/
-    pub fn sam_hdr_dup(h0: *const sam_hdr_t) -> *mut sam_hdr_t;
-}
-pub type samFile = htsFile;
-extern "C" {
-    /// Create a header from existing text.
-    ///*!
-    ///* @param l_text    Length of text
-    ///* @param text      Header text
-    ///* @return A populated sam_hdr_t structure on success; NULL on failure.
-    ///* @note The text field of the returned header will be NULL, and the l_text
-    ///* field will be zero.
-    ///*/
-    pub fn sam_hdr_parse(l_text: usize, text: *const ::std::os::raw::c_char) -> *mut sam_hdr_t;
-}
-extern "C" {
-    /// Read a header from a SAM, BAM or CRAM file.
-    ///*!
-    ///* @param fp    Pointer to a SAM, BAM or CRAM file handle
-    ///* @return  A populated sam_hdr_t struct on success; NULL on failure.
-    ///*/
-    pub fn sam_hdr_read(fp: *mut samFile) -> *mut sam_hdr_t;
-}
-extern "C" {
-    /// Write a header to a SAM, BAM or CRAM file.
-    ///*!
-    ///* @param fp    SAM, BAM or CRAM file header
-    ///* @param h     Header structure to write
-    ///* @return  0 on success; -1 on failure
-    ///*/
-    pub fn sam_hdr_write(fp: *mut samFile, h: *const sam_hdr_t) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Returns the current length of the header text.
-    ///*!
-    ///* @return  >= 0 on success, SIZE_MAX on failure
-    ///*/
-    pub fn sam_hdr_length(h: *mut sam_hdr_t) -> usize;
-}
-extern "C" {
-    /// Returns the text representation of the header.
-    ///*!
-    ///* @return  valid char pointer on success, NULL on failure
-    ///*
-    ///* The returned string is part of the header structure.  It will remain
-    ///* valid until a call to a header API function causes the string to be
-    ///* invalidated, or the header is destroyed.
-    ///*
-    ///* The caller should not attempt to free or realloc this pointer.
-    ///*/
-    pub fn sam_hdr_str(h: *mut sam_hdr_t) -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    /// Returns the number of references in the header.
-    ///*!
-    ///* @return  >= 0 on success, -1 on failure
-    ///*/
-    pub fn sam_hdr_nref(h: *const sam_hdr_t) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Add formatted lines to an existing header.
-    ///*!
-    ///* @param lines  Full SAM header record, eg "@SQ\tSN:foo\tLN:100", with
-    ///*               optional new-line. If it contains more than 1 line then
-    ///*               multiple lines will be added in order
-    ///* @param len    The maximum length of lines (if an early NUL is not
-    ///*               encountered). len may be 0 if unknown, in which case
-    ///*               lines must be NUL-terminated
-    ///* @return       0 on success, -1 on failure
-    ///*
-    ///* The lines will be appended to the end of the existing header
-    ///* (apart from HD, which always comes first).
-    ///*/
-    pub fn sam_hdr_add_lines(
-        h: *mut sam_hdr_t,
-        lines: *const ::std::os::raw::c_char,
-        len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Adds a single line to an existing header.
-    ///*!
-    ///* Specify type and one or more key,value pairs, ending with the NULL key.
-    ///* Eg. sam_hdr_add_line(h, "SQ", "ID", "foo", "LN", "100", NULL).
-    ///*
-    ///* @param type  Type of the added line. Eg. "SQ"
-    ///* @return      0 on success, -1 on failure
-    ///*
-    ///* The new line will be added immediately after any others of the same
-    ///* type, or at the end of the existing header if no lines of the
-    ///* given type currently exist.  The exception is HD lines, which always
-    ///* come first.  If an HD line already exists, it will be replaced.
-    ///*/
-    pub fn sam_hdr_add_line(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ...
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Returns a complete line of formatted text for a given type and ID.
-    ///*!
-    ///* @param type      Type of the searched line. Eg. "SQ"
-    ///* @param ID_key    Tag key defining the line. Eg. "SN"
-    ///* @param ID_value  Tag value associated with the key above. Eg. "ref1"
-    ///* @param ks        kstring to hold the result
-    ///* @return          0 on success;
-    ///*                 -1 if no matching line is found
-    ///*                 -2 on other failures
-    ///*
-    ///* Puts a complete line of formatted text for a specific header type/ID
-    ///* combination into @p ks. If ID_key is NULL then it returns the first line of
-    ///* the specified type.
-    ///*
-    ///* Any existing content in @p ks will be overwritten.
-    ///*/
-    pub fn sam_hdr_find_line_id(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ID_key: *const ::std::os::raw::c_char,
-        ID_val: *const ::std::os::raw::c_char,
-        ks: *mut kstring_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Returns a complete line of formatted text for a given type and index.
-    ///*!
-    ///* @param type      Type of the searched line. Eg. "SQ"
-    ///* @param position  Index in lines of this type (zero-based)
-    ///* @param ks        kstring to hold the result
-    ///* @return          0 on success;
-    ///*                 -1 if no matching line is found
-    ///*                 -2 on other failures
-    ///*
-    ///* Puts a complete line of formatted text for a specific line into @p ks.
-    ///* The header line is selected using the @p type and @p position parameters.
-    ///*
-    ///* Any existing content in @p ks will be overwritten.
-    ///*/
-    pub fn sam_hdr_find_line_pos(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        pos: ::std::os::raw::c_int,
-        ks: *mut kstring_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Remove a line with given type / id from a header
-    ///*!
-    ///* @param type      Type of the searched line. Eg. "SQ"
-    ///* @param ID_key    Tag key defining the line. Eg. "SN"
-    ///* @param ID_value  Tag value associated with the key above. Eg. "ref1"
-    ///* @return          0 on success, -1 on error
-    ///*
-    ///* Remove a line from the header by specifying a tag:value that uniquely
-    ///* identifies the line, i.e. the @SQ line containing "SN:ref1".
-    ///*
-    ///* \@SQ line is uniquely identified by the SN tag.
-    ///* \@RG line is uniquely identified by the ID tag.
-    ///* \@PG line is uniquely identified by the ID tag.
-    ///* Eg. sam_hdr_remove_line_id(h, "SQ", "SN", "ref1")
-    ///*
-    ///* If no key:value pair is specified, the type MUST be followed by a NULL argument and
-    ///* the first line of the type will be removed, if any.
-    ///* Eg. sam_hdr_remove_line_id(h, "SQ", NULL, NULL)
-    ///*
-    ///* @note Removing \@PG lines is currently unsupported.
-    ///*/
-    pub fn sam_hdr_remove_line_id(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ID_key: *const ::std::os::raw::c_char,
-        ID_value: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Remove nth line of a given type from a header
-    ///*!
-    ///* @param type     Type of the searched line. Eg. "SQ"
-    ///* @param position Index in lines of this type (zero-based). E.g. 3
-    ///* @return         0 on success, -1 on error
-    ///*
-    ///* Remove a line from the header by specifying the position in the type
-    ///* group, i.e. 3rd @SQ line.
-    ///*/
-    pub fn sam_hdr_remove_line_pos(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        position: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Add or update tag key,value pairs in a header line.
-    ///*!
-    ///* @param type      Type of the searched line. Eg. "SQ"
-    ///* @param ID_key    Tag key defining the line. Eg. "SN"
-    ///* @param ID_value  Tag value associated with the key above. Eg. "ref1"
-    ///* @return          0 on success, -1 on error
-    ///*
-    ///* Adds or updates tag key,value pairs in a header line.
-    ///* Eg. for adding M5 tags to @SQ lines or updating sort order for the
-    ///* @HD line.
-    ///*
-    ///* Specify multiple key,value pairs ending in NULL. Eg.
-    ///* sam_hdr_update_line(h, "RG", "ID", "rg1", "DS", "description", "PG", "samtools", NULL)
-    ///*
-    ///* Attempting to update the record name (i.e. @SQ SN or @RG ID) will
-    ///* work as long as the new name is not already in use, however doing this
-    ///* on a file opened for reading may produce unexpected results.
-    ///*
-    ///* Renaming an @RG record in this way will only change the header.  Alignment
-    ///* records written later will not be updated automatically even if they
-    ///* reference the old read group name.
-    ///*
-    ///* Attempting to change an @PG ID tag is not permitted.
-    ///*/
-    pub fn sam_hdr_update_line(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ID_key: *const ::std::os::raw::c_char,
-        ID_value: *const ::std::os::raw::c_char,
-        ...
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Remove all lines of a given type from a header, except the one matching an ID
-    ///*!
-    ///* @param type      Type of the searched line. Eg. "SQ"
-    ///* @param ID_key    Tag key defining the line. Eg. "SN"
-    ///* @param ID_value  Tag value associated with the key above. Eg. "ref1"
-    ///* @return          0 on success, -1 on failure
-    ///*
-    ///* Remove all lines of type <type> from the header, except the one
-    ///* specified by tag:value, i.e. the @SQ line containing "SN:ref1".
-    ///*
-    ///* If no line matches the key:value ID, all lines of the given type are removed.
-    ///* To remove all lines of a given type, use NULL for both ID_key and ID_value.
-    ///*/
-    pub fn sam_hdr_remove_except(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ID_key: *const ::std::os::raw::c_char,
-        ID_value: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Remove header lines of a given type, except those in a given ID set
-    ///*!
-    ///* @param type  Type of the searched line. Eg. "RG"
-    ///* @param id    Tag key defining the line. Eg. "ID"
-    ///* @param rh    Hash set initialised by the caller with the values to be kept.
-    ///*              See description for how to create this.
-    ///* @return      0 on success, -1 on failure
-    ///*
-    ///* Remove all lines of type <type> from the header, except the one
-    ///* specified in the hash set @p rh.
-    ///* Declaration of @rh is done using KHASH_SET_INIT_STR macro. Eg.
-    ///* @code{.c}
-    ///*              KHASH_SET_INIT_STR(remove)
-    ///*              typedef khash_t(remove) *remhash_t;
-    ///*
-    ///*              void your_method() {
-    ///*                  samFile *sf = sam_open("alignment.bam", "r");
-    ///*                  sam_hdr_t *h = sam_hdr_read(sf);
-    ///*                  remhash_t rh = kh_init(remove);
-    ///*                  int ret = 0;
-    ///*                  kh_put(remove, rh, strdup("chr2"), &ret);
-    ///*                  kh_put(remove, rh, strdup("chr3"), &ret);
-    ///*                  if (sam_hdr_remove_lines(h, "SQ", "SN", rh) == -1)
-    ///*                      fprintf(stderr, "Error removing lines\n");
-    ///*                  khint_t k;
-    ///*                  for (k = 0; k < kh_end(rh); ++k)
-    ///*                     if (kh_exist(rh, k)) free((char*)kh_key(rh, k));
-    ///*                  kh_destroy(remove, rh);
-    ///*                  sam_hdr_destroy(h);
-    ///*                  sam_close(sf);
-    ///*              }
-    ///* @endcode
-    ///*
-    ///*/
-    pub fn sam_hdr_remove_lines(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        id: *const ::std::os::raw::c_char,
-        rh: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Count the number of lines for a given header type
-    ///*!
-    ///* @param h     BAM header
-    ///* @param type  Header type to count. Eg. "RG"
-    ///* @return  Number of lines of this type on success; -1 on failure
-    ///*/
-    pub fn sam_hdr_count_lines(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Index of the line for the types that have dedicated look-up tables (SQ, RG, PG)
-    ///*!
-    ///* @param h     BAM header
-    ///* @param type  Type of the searched line. Eg. "RG"
-    ///* @param key   The value of the identifying key. Eg. "rg1"
-    ///* @return  0-based index on success; -1 if line does not exist; -2 on failure
-    ///*/
-    pub fn sam_hdr_line_index(
-        bh: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        key: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Id key of the line for the types that have dedicated look-up tables (SQ, RG, PG)
-    ///*!
-    ///* @param h     BAM header
-    ///* @param type  Type of the searched line. Eg. "RG"
-    ///* @param pos   Zero-based index inside the type group. Eg. 2 (for the third RG line)
-    ///* @return  Valid key string on success; NULL on failure
-    ///*/
-    pub fn sam_hdr_line_name(
-        bh: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        pos: ::std::os::raw::c_int,
-    ) -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    /// Return the value associated with a key for a header line identified by ID_key:ID_val
-    ///*!
-    ///* @param type      Type of the line to which the tag belongs. Eg. "SQ"
-    ///* @param ID_key    Tag key defining the line. Eg. "SN". Can be NULL, if looking for the first line.
-    ///* @param ID_value  Tag value associated with the key above. Eg. "ref1". Can be NULL, if ID_key is NULL.
-    ///* @param key       Key of the searched tag. Eg. "LN"
-    ///* @param ks        kstring where the value will be written
-    ///* @return          0 on success
-    ///*                 -1 if the requested tag does not exist
-    ///*                 -2 on other errors
-    ///*
-    ///* Looks for a specific key in a single SAM header line and writes the
-    ///* associated value into @p ks.  The header line is selected using the ID_key
-    ///* and ID_value parameters.  Any pre-existing content in @p ks will be
-    ///* overwritten.
-    ///*/
-    pub fn sam_hdr_find_tag_id(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ID_key: *const ::std::os::raw::c_char,
-        ID_value: *const ::std::os::raw::c_char,
-        key: *const ::std::os::raw::c_char,
-        ks: *mut kstring_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Return the value associated with a key for a header line identified by position
-    ///*!
-    ///* @param type      Type of the line to which the tag belongs. Eg. "SQ"
-    ///* @param position  Index in lines of this type (zero-based). E.g. 3
-    ///* @param key       Key of the searched tag. Eg. "LN"
-    ///* @param ks        kstring where the value will be written
-    ///* @return          0 on success
-    ///*                 -1 if the requested tag does not exist
-    ///*                 -2 on other errors
-    ///*
-    ///* Looks for a specific key in a single SAM header line and writes the
-    ///* associated value into @p ks.  The header line is selected using the @p type
-    ///* and @p position parameters.  Any pre-existing content in @p ks will be
-    ///* overwritten.
-    ///*/
-    pub fn sam_hdr_find_tag_pos(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        pos: ::std::os::raw::c_int,
-        key: *const ::std::os::raw::c_char,
-        ks: *mut kstring_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Remove the key from the line identified by type, ID_key and ID_value.
-    ///*!
-    ///* @param type      Type of the line to which the tag belongs. Eg. "SQ"
-    ///* @param ID_key    Tag key defining the line. Eg. "SN"
-    ///* @param ID_value  Tag value associated with the key above. Eg. "ref1"
-    ///* @param key       Key of the targeted tag. Eg. "M5"
-    ///* @return          1 if the key was removed; 0 if it was not present; -1 on error
-    ///*/
-    pub fn sam_hdr_remove_tag_id(
-        h: *mut sam_hdr_t,
-        type_: *const ::std::os::raw::c_char,
-        ID_key: *const ::std::os::raw::c_char,
-        ID_value: *const ::std::os::raw::c_char,
-        key: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Get the target id for a given reference sequence name
-    ///*!
-    ///* @param ref  Reference name
-    ///* @return     Positive value on success,
-    ///*             -1 if unknown reference,
-    ///*             -2 if the header could not be parsed
-    ///*
-    ///* Looks up a reference sequence by name in the reference hash table
-    ///* and returns the numerical target id.
-    ///*/
-    pub fn sam_hdr_name2tid(
-        h: *mut sam_hdr_t,
+    pub fn bam_name2id(
+        h: *mut bam_hdr_t,
         ref_: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the reference sequence name from a target index
-    ///*!
-    ///* @param tid  Target index
-    ///* @return     Valid reference name on success, NULL on failure
-    ///*
-    ///* Fetch the reference sequence name from the target name array,
-    ///* using the numerical target id.
-    ///*/
-    pub fn sam_hdr_tid2name(
-        h: *const sam_hdr_t,
-        tid: ::std::os::raw::c_int,
-    ) -> *const ::std::os::raw::c_char;
+    pub fn bam_hdr_dup(h0: *const bam_hdr_t) -> *mut bam_hdr_t;
 }
 extern "C" {
-    /// Get the reference sequence length from a target index
-    ///*!
-    ///* @param tid  Target index
-    ///* @return     Strictly positive value on success, 0 on failure
-    ///*
-    ///* Fetch the reference sequence length from the target length array,
-    ///* using the numerical target id.
-    ///*/
-    pub fn sam_hdr_tid2len(h: *const sam_hdr_t, tid: ::std::os::raw::c_int) -> u32;
-}
-extern "C" {
-    /// Generate a unique \@PG ID: value
-    ///*!
-    ///* @param name  Name of the program. Eg. samtools
-    ///* @return      Valid ID on success, NULL on failure
-    ///*
-    ///* Returns a unique ID from a base name.  The string returned will remain
-    ///* valid until the next call to this function, or the header is destroyed.
-    ///* The caller should not attempt to free() or realloc() it.
-    ///*/
-    pub fn sam_hdr_pg_id(
-        h: *mut sam_hdr_t,
-        name: *const ::std::os::raw::c_char,
-    ) -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    /// Add an \@PG line.
-    ///*!
-    ///* @param name  Name of the program. Eg. samtools
-    ///* @return      0 on success, -1 on failure
-    ///*
-    ///* If we wish complete control over this use sam_hdr_add_line() directly. This
-    ///* function uses that, but attempts to do a lot of tedious house work for
-    ///* you too.
-    ///*
-    ///* - It will generate a suitable ID if the supplied one clashes.
-    ///* - It will generate multiple \@PG records if we have multiple PG chains.
-    ///*
-    ///* Call it as per sam_hdr_add_line() with a series of key,value pairs ending
-    ///* in NULL.
-    ///*/
-    pub fn sam_hdr_add_pg(
-        h: *mut sam_hdr_t,
-        name: *const ::std::os::raw::c_char,
-        ...
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// A function to help with construction of CL tags in @PG records.
-    /// Takes an argc, argv pair and returns a single space-separated string.
-    /// This string should be deallocated by the calling function.
-    ///
-    /// @return
-    /// Returns malloced char * on success;
-    ///         NULL on failure
-    pub fn stringify_argv(
-        argc: ::std::os::raw::c_int,
-        argv: *mut *mut ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    /// Increments the reference count on a header
-    ///*!
-    ///* This permits multiple files to share the same header, all calling
-    ///* sam_hdr_destroy when done, without causing errors for other open files.
-    ///*/
-    pub fn sam_hdr_incr_ref(h: *mut sam_hdr_t);
-}
-extern "C" {
-    /// Create a new bam1_t alignment structure
-    ///**
-    ///@return An empty bam1_t structure on success, NULL on failure
-    ///*/
     pub fn bam_init1() -> *mut bam1_t;
 }
 extern "C" {
-    /// Destory a bam1_t structure
-    ///**
-    ///@param b  structure to destroy
-    ///
-    ///Does nothing if @p b is NULL.  If not, all memory associated with @p b
-    ///will be freed, along with the structure itself.  @p b should not be
-    ///accessed after calling this function.
-    ///*/
     pub fn bam_destroy1(b: *mut bam1_t);
 }
 extern "C" {
-    /// Read a BAM format alignment record
-    ///**
-    ///@param fp   BGZF file being read
-    ///@param b    Destination for the alignment data
-    ///@return number of bytes read on success
-    ///-1 at end of file
-    ///< -1 on failure
-    ///
-    ///This function can only read BAM format files.  Most code should use
-    ///sam_read1() instead, which can be used with BAM, SAM and CRAM formats.
-    ///*/
     pub fn bam_read1(fp: *mut BGZF, b: *mut bam1_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Write a BAM format alignment record
-    ///**
-    ///@param fp  BGZF file being written
-    ///@param b   Alignment record to write
-    ///@return number of bytes written on success
-    ///-1 on error
-    ///
-    ///This function can only write BAM format files.  Most code should use
-    ///sam_write1() instead, which can be used with BAM, SAM and CRAM formats.
-    ///*/
     pub fn bam_write1(fp: *mut BGZF, b: *const bam1_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Copy alignment record data
-    ///**
-    ///@param bdst  Destination alignment record
-    ///@param bsrc  Source alignment record
-    ///@return bdst on success; NULL on failure
-    ///*/
     pub fn bam_copy1(bdst: *mut bam1_t, bsrc: *const bam1_t) -> *mut bam1_t;
 }
 extern "C" {
-    /// Create a duplicate alignment record
-    ///**
-    ///@param bsrc  Source alignment record
-    ///@return Pointer to a new alignment record on success; NULL on failure
-    ///*/
     pub fn bam_dup1(bsrc: *const bam1_t) -> *mut bam1_t;
 }
 extern "C" {
-    /// Calculate query length from CIGAR data
-    ///**
-    ///@param n_cigar   Number of items in @p cigar
-    ///@param cigar     CIGAR data
-    ///@return Query length
-    ///
-    ///CIGAR data is stored as in the BAM format, i.e. (op_len << 4) | op
-    ///where op_len is the length in bases and op is a value between 0 and 8
-    ///representing one of the operations "MIDNSHP=X" (M = 0; X = 8)
-    ///
-    ///This function returns the sum of the lengths of the M, I, S, = and X
-    ///operations in @p cigar (these are the operations that "consume" query
-    ///bases).  All other operations (including invalid ones) are ignored.
-    ///*/
     pub fn bam_cigar2qlen(
         n_cigar: ::std::os::raw::c_int,
         cigar: *const u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Calculate reference length from CIGAR data
-    ///**
-    ///@param n_cigar   Number of items in @p cigar
-    ///@param cigar     CIGAR data
-    ///@return Reference length
-    ///
-    ///CIGAR data is stored as in the BAM format, i.e. (op_len << 4) | op
-    ///where op_len is the length in bases and op is a value between 0 and 8
-    ///representing one of the operations "MIDNSHP=X" (M = 0; X = 8)
-    ///
-    ///This function returns the sum of the lengths of the M, D, N, = and X
-    ///operations in @p cigar (these are the operations that "consume" reference
-    ///bases).  All other operations (including invalid ones) are ignored.
-    ///*/
     pub fn bam_cigar2rlen(
         n_cigar: ::std::os::raw::c_int,
         cigar: *const u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///@abstract Calculate the rightmost base position of an alignment on the
-    ///reference genome.
-    ///
-    ///@param  b  pointer to an alignment
-    ///@return    the coordinate of the first base after the alignment, 0-based
-    ///
-    ///@discussion For a mapped read, this is just b->core.pos + bam_cigar2rlen.
-    ///For an unmapped read (either according to its flags or if it has no cigar
-    ///string), we return b->core.pos + 1 by convention.
     pub fn bam_endpos(b: *const bam1_t) -> i32;
 }
 extern "C" {
     pub fn bam_str2flag(str: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// returns negative value on error
     pub fn bam_flag2str(flag: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Initialise fp->idx for the current format type for SAM, BAM and CRAM types .
-    ///** @param fp        File handle for the data file being written.
-    ///@param h         Bam header structured (needed for BAI and CSI).
-    ///@param min_shift 0 for BAI, or larger for CSI (CSI defaults to 14).
-    ///@param fnidx     Filename to write index to.  This pointer must remain valid
-    ///until after sam_idx_save is called.
-    ///@return          0 on success, <0 on failure.
-    ///
-    ///@note This must be called after the header has been written, but before
-    ///any other data.
-    ///*/
-    pub fn sam_idx_init(
-        fp: *mut htsFile,
-        h: *mut sam_hdr_t,
-        min_shift: ::std::os::raw::c_int,
-        fnidx: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Writes the index initialised with sam_idx_init to disk.
-    ///** @param fp        File handle for the data file being written.
-    ///@return          0 on success, <0 on filaure.
-    ///*/
-    pub fn sam_idx_save(fp: *mut htsFile) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    /// Load a BAM (.csi or .bai) or CRAM (.crai) index file
-    ///** @param fp  File handle of the data file whose index is being opened
-    ///@param fn  BAM/CRAM/etc filename to search alongside for the index file
-    ///@return  The index, or NULL if an error occurred.
-    ///
-    ///Equivalent to sam_index_load3(fp, fn, NULL, HTS_IDX_SAVE_REMOTE);
-    ///*/
     pub fn sam_index_load(fp: *mut htsFile, fn_: *const ::std::os::raw::c_char) -> *mut hts_idx_t;
 }
 extern "C" {
-    /// Load a specific BAM (.csi or .bai) or CRAM (.crai) index file
-    ///** @param fp     File handle of the data file whose index is being opened
-    ///@param fn     BAM/CRAM/etc data file filename
-    ///@param fnidx  Index filename, or NULL to search alongside @a fn
-    ///@return  The index, or NULL if an error occurred.
-    ///
-    ///Equivalent to sam_index_load3(fp, fn, fnidx, HTS_IDX_SAVE_REMOTE);
-    ///*/
     pub fn sam_index_load2(
         fp: *mut htsFile,
         fn_: *const ::std::os::raw::c_char,
@@ -3807,49 +1323,12 @@ extern "C" {
     ) -> *mut hts_idx_t;
 }
 extern "C" {
-    /// Load or stream a BAM (.csi or .bai) or CRAM (.crai) index file
-    ///** @param fp     File handle of the data file whose index is being opened
-    ///@param fn     BAM/CRAM/etc data file filename
-    ///@param fnidx  Index filename, or NULL to search alongside @a fn
-    ///@param flags  Flags to alter behaviour (see description)
-    ///@return  The index, or NULL if an error occurred.
-    ///
-    ///The @p flags parameter can be set to a combination of the following values:
-    ///
-    ///HTS_IDX_SAVE_REMOTE   Save a local copy of any remote indexes
-    ///HTS_IDX_SILENT_FAIL   Fail silently if the index is not present
-    ///
-    ///Note that HTS_IDX_SAVE_REMOTE has no effect for remote CRAM indexes.  They
-    ///are always downloaded and never cached locally.
-    ///*/
-    pub fn sam_index_load3(
-        fp: *mut htsFile,
-        fn_: *const ::std::os::raw::c_char,
-        fnidx: *const ::std::os::raw::c_char,
-        flags: ::std::os::raw::c_int,
-    ) -> *mut hts_idx_t;
-}
-extern "C" {
-    /// Generate and save an index file
-    ///** @param fn        Input BAM/etc filename, to which .csi/etc will be added
-    ///@param min_shift Positive to generate CSI, or 0 to generate BAI
-    ///@return  0 if successful, or negative if an error occurred (usually -1; or
-    ///-2: opening fn failed; -3: format not indexable; -4:
-    ///failed to create and/or save the index)
-    ///*/
     pub fn sam_index_build(
         fn_: *const ::std::os::raw::c_char,
         min_shift: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Generate and save an index to a specific file
-    ///** @param fn        Input BAM/CRAM/etc filename
-    ///@param fnidx     Output filename, or NULL to add .bai/.csi/etc to @a fn
-    ///@param min_shift Positive to generate CSI, or 0 to generate BAI
-    ///@return  0 if successful, or negative if an error occurred (see
-    ///sam_index_build for error codes)
-    ///*/
     pub fn sam_index_build2(
         fn_: *const ::std::os::raw::c_char,
         fnidx: *const ::std::os::raw::c_char,
@@ -3857,14 +1336,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Generate and save an index to a specific file
-    ///** @param fn        Input BAM/CRAM/etc filename
-    ///@param fnidx     Output filename, or NULL to add .bai/.csi/etc to @a fn
-    ///@param min_shift Positive to generate CSI, or 0 to generate BAI
-    ///@param nthreads  Number of threads to use when building the index
-    ///@return  0 if successful, or negative if an error occurred (see
-    ///sam_index_build for error codes)
-    ///*/
     pub fn sam_index_build3(
         fn_: *const ::std::os::raw::c_char,
         fnidx: *const ::std::os::raw::c_char,
@@ -3873,23 +1344,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Create a BAM/CRAM iterator
-    ///** @param idx     Index
-    ///@param tid     Target id
-    ///@param beg     Start position in target
-    ///@param end     End position in target
-    ///@return An iterator on success; NULL on failure
-    ///
-    ///The following special values (defined in htslib/hts.h)can be used for @p tid.
-    ///When using one of these values, @p beg and @p end are ignored.
-    ///
-    ///HTS_IDX_NOCOOR iterates over unmapped reads sorted at the end of the file
-    ///HTS_IDX_START  iterates over the entire file
-    ///HTS_IDX_REST   iterates from the current position to the end of the file
-    ///HTS_IDX_NONE   always returns "no more alignment records"
-    ///
-    ///When using HTS_IDX_REST or HTS_IDX_NONE, NULL can be passed in to @p idx.
-    ///*/
     pub fn sam_itr_queryi(
         idx: *const hts_idx_t,
         tid: ::std::os::raw::c_int,
@@ -3898,97 +1352,19 @@ extern "C" {
     ) -> *mut hts_itr_t;
 }
 extern "C" {
-    /// Create a SAM/BAM/CRAM iterator
-    ///** @param idx     Index
-    ///@param hdr     Header
-    ///@param region  Region specification
-    ///@return An iterator on success; NULL on failure
-    ///
-    ///Regions are parsed by hts_parse_reg(), and take one of the following forms:
-    ///
-    ///region          | Outputs
-    ///--------------- | -------------
-    ///REF             | All reads with RNAME REF
-    ///REF:            | All reads with RNAME REF
-    ///REF:START       | Reads with RNAME REF overlapping START to end of REF
-    ///REF:-END        | Reads with RNAME REF overlapping start of REF to END
-    ///REF:START-END   | Reads with RNAME REF overlapping START to END
-    ///.               | All reads from the start of the file
-    ///*               | Unmapped reads at the end of the file (RNAME '*' in SAM)
-    ///
-    ///The form `REF:` should be used when the reference name itself contains a colon.
-    ///
-    ///Note that SAM files must be bgzf-compressed for iterators to work.
-    ///*/
     pub fn sam_itr_querys(
         idx: *const hts_idx_t,
-        hdr: *mut sam_hdr_t,
+        hdr: *mut bam_hdr_t,
         region: *const ::std::os::raw::c_char,
     ) -> *mut hts_itr_t;
 }
 extern "C" {
-    /// Create a multi-region iterator
-    ///** @param idx       Index
-    ///@param hdr       Header
-    ///@param reglist   Array of regions to iterate over
-    ///@param regcount  Number of items in reglist
-    ///
-    ///Each @p reglist entry should have the reference name in the `reg` field, an
-    ///array of regions for that reference in `intervals` and the number of items
-    ///in `intervals` should be stored in `count`.  No other fields need to be filled
-    ///in.
-    ///
-    ///The iterator will return all reads overlapping the given regions.  If a read
-    ///overlaps more than one region, it will only be returned once.
-    ///*/
     pub fn sam_itr_regions(
         idx: *const hts_idx_t,
-        hdr: *mut sam_hdr_t,
+        hdr: *mut bam_hdr_t,
         reglist: *mut hts_reglist_t,
         regcount: ::std::os::raw::c_uint,
-    ) -> *mut hts_itr_t;
-}
-extern "C" {
-    /// Create a multi-region iterator
-    ///** @param idx       Index
-    ///@param hdr       Header
-    ///@param regarray  Array of ref:interval region specifiers
-    ///@param regcount  Number of items in regarray
-    ///
-    ///Each @p regarray entry is parsed by hts_parse_reg(), and takes one of the
-    ///following forms:
-    ///
-    ///region          | Outputs
-    ///--------------- | -------------
-    ///REF             | All reads with RNAME REF
-    ///REF:            | All reads with RNAME REF
-    ///REF:START       | Reads with RNAME REF overlapping START to end of REF
-    ///REF:-END        | Reads with RNAME REF overlapping start of REF to END
-    ///REF:START-END   | Reads with RNAME REF overlapping START to END
-    ///.               | All reads from the start of the file
-    ///*               | Unmapped reads at the end of the file (RNAME '*' in SAM)
-    ///
-    ///The form `REF:` should be used when the reference name itself contains a colon.
-    ///
-    ///The iterator will return all reads overlapping the given regions.  If a read
-    ///overlaps more than one region, it will only be returned once.
-    ///*/
-    pub fn sam_itr_regarray(
-        idx: *const hts_idx_t,
-        hdr: *mut sam_hdr_t,
-        regarray: *mut *mut ::std::os::raw::c_char,
-        regcount: ::std::os::raw::c_uint,
-    ) -> *mut hts_itr_t;
-}
-extern "C" {
-    pub fn sam_parse_region(
-        h: *mut sam_hdr_t,
-        s: *const ::std::os::raw::c_char,
-        tid: *mut ::std::os::raw::c_int,
-        beg: *mut i64,
-        end: *mut i64,
-        flags: ::std::os::raw::c_int,
-    ) -> *const ::std::os::raw::c_char;
+    ) -> *mut hts_itr_multi_t;
 }
 extern "C" {
     pub fn sam_open_mode(
@@ -4004,9 +1380,22 @@ extern "C" {
         format: *const ::std::os::raw::c_char,
     ) -> *mut ::std::os::raw::c_char;
 }
+pub type samFile = htsFile;
+extern "C" {
+    pub fn sam_hdr_parse(
+        l_text: ::std::os::raw::c_int,
+        text: *const ::std::os::raw::c_char,
+    ) -> *mut bam_hdr_t;
+}
+extern "C" {
+    pub fn sam_hdr_read(fp: *mut samFile) -> *mut bam_hdr_t;
+}
+extern "C" {
+    pub fn sam_hdr_write(fp: *mut samFile, h: *const bam_hdr_t) -> ::std::os::raw::c_int;
+}
 extern "C" {
     pub fn sam_hdr_change_HD(
-        h: *mut sam_hdr_t,
+        h: *mut bam_hdr_t,
         key: *const ::std::os::raw::c_char,
         val: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
@@ -4014,114 +1403,49 @@ extern "C" {
 extern "C" {
     pub fn sam_parse1(
         s: *mut kstring_t,
-        h: *mut sam_hdr_t,
+        h: *mut bam_hdr_t,
         b: *mut bam1_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn sam_format1(
-        h: *const sam_hdr_t,
+        h: *const bam_hdr_t,
         b: *const bam1_t,
         str: *mut kstring_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// sam_read1 - Read a record from a file
-    ///** @param fp   Pointer to the source file
-    ///*  @param h    Pointer to the header previously read (fully or partially)
-    ///*  @param b    Pointer to the record placeholder
-    ///*  @return >= 0 on successfully reading a new record, -1 on end of stream, < -1 on error
-    ///*/
-    pub fn sam_read1(fp: *mut samFile, h: *mut sam_hdr_t, b: *mut bam1_t) -> ::std::os::raw::c_int;
+    pub fn sam_read1(fp: *mut samFile, h: *mut bam_hdr_t, b: *mut bam1_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// sam_write1 - Write a record to a file
-    ///** @param fp    Pointer to the destination file
-    ///*  @param h     Pointer to the header structure previously read
-    ///*  @param b     Pointer to the record to be written
-    ///*  @return >= 0 on successfully writing the record, -1 on error
-    ///*/
     pub fn sam_write1(
         fp: *mut samFile,
-        h: *const sam_hdr_t,
+        h: *const bam_hdr_t,
         b: *const bam1_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return a pointer to an aux record
-    ///** @param b   Pointer to the bam record
-    ///@param tag Desired aux tag
-    ///@return Pointer to the tag data, or NULL if tag is not present or on error
-    ///If the tag is not present, this function returns NULL and sets errno to
-    ///ENOENT.  If the bam record's aux data is corrupt (either a tag has an
-    ///invalid type, or the last record is incomplete) then errno is set to
-    ///EINVAL and NULL is returned.
-    ///*/
     pub fn bam_aux_get(b: *const bam1_t, tag: *const ::std::os::raw::c_char) -> *mut u8;
 }
 extern "C" {
-    /// Get an integer aux value
-    ///** @param s Pointer to the tag data, as returned by bam_aux_get()
-    ///@return The value, or 0 if the tag was not an integer type
-    ///If the tag is not an integer type, errno is set to EINVAL.  This function
-    ///will not return the value of floating-point tags.
-    ///*/
     pub fn bam_aux2i(s: *const u8) -> i64;
 }
 extern "C" {
-    /// Get an integer aux value
-    ///** @param s Pointer to the tag data, as returned by bam_aux_get()
-    ///@return The value, or 0 if the tag was not an integer type
-    ///If the tag is not an numeric type, errno is set to EINVAL.  The value of
-    ///integer flags will be returned cast to a double.
-    ///*/
     pub fn bam_aux2f(s: *const u8) -> f64;
 }
 extern "C" {
-    /// Get a character aux value
-    ///** @param s Pointer to the tag data, as returned by bam_aux_get().
-    ///@return The value, or 0 if the tag was not a character ('A') type
-    ///If the tag is not a character type, errno is set to EINVAL.
-    ///*/
     pub fn bam_aux2A(s: *const u8) -> ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get a string aux value
-    ///** @param s Pointer to the tag data, as returned by bam_aux_get().
-    ///@return Pointer to the string, or NULL if the tag was not a string type
-    ///If the tag is not a string type ('Z' or 'H'), errno is set to EINVAL.
-    ///*/
     pub fn bam_aux2Z(s: *const u8) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the length of an array-type ('B') tag
-    ///** @param s Pointer to the tag data, as returned by bam_aux_get().
-    ///@return The length of the array, or 0 if the tag is not an array type.
-    ///If the tag is not an array type, errno is set to EINVAL.
-    ///*/
     pub fn bam_auxB_len(s: *const u8) -> u32;
 }
 extern "C" {
-    /// Get an integer value from an array-type tag
-    ///** @param s   Pointer to the tag data, as returned by bam_aux_get().
-    ///@param idx 0-based Index into the array
-    ///@return The idx'th value, or 0 on error.
-    ///If the array is not an integer type, errno is set to EINVAL.  If idx
-    ///is greater than or equal to  the value returned by bam_auxB_len(s),
-    ///errno is set to ERANGE.  In both cases, 0 will be returned.
-    ///*/
     pub fn bam_auxB2i(s: *const u8, idx: u32) -> i64;
 }
 extern "C" {
-    /// Get a floating-point value from an array-type tag
-    ///** @param s   Pointer to the tag data, as returned by bam_aux_get().
-    ///@param idx 0-based Index into the array
-    ///@return The idx'th value, or 0.0 on error.
-    ///If the array is not a numeric type, errno is set to EINVAL.  This can
-    ///only actually happen if the input record has an invalid type field.  If
-    ///idx is greater than or equal to  the value returned by bam_auxB_len(s),
-    ///errno is set to ERANGE.  In both cases, 0.0 will be returned.
-    ///*/
     pub fn bam_auxB2f(s: *const u8, idx: u32) -> f64;
 }
 extern "C" {
@@ -4144,37 +1468,6 @@ extern "C" {
         data: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
-extern "C" {
-    pub fn bam_aux_update_int(
-        b: *mut bam1_t,
-        tag: *const ::std::os::raw::c_char,
-        val: i64,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn bam_aux_update_float(
-        b: *mut bam1_t,
-        tag: *const ::std::os::raw::c_char,
-        val: f32,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn bam_aux_update_array(
-        b: *mut bam1_t,
-        tag: *const ::std::os::raw::c_char,
-        type_: u8,
-        items: u32,
-        data: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int;
-}
-/// @typedef
-///@abstract Generic pileup 'client data'.
-///
-///@discussion The pileup iterator allows setting a constructor and
-///destructor function, which will be called every time a sequence is
-///fetched and discarded.  This permits caching of per-sequence data in
-///a tidy manner during the pileup process.  This union is the cached
-///data to be manipulated by the "client" (the caller of pileup).
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union bam_pileup_cd {
@@ -4183,67 +1476,6 @@ pub union bam_pileup_cd {
     pub f: f64,
     _bindgen_union_align: u64,
 }
-#[test]
-fn bindgen_test_layout_bam_pileup_cd() {
-    assert_eq!(
-        ::std::mem::size_of::<bam_pileup_cd>(),
-        8usize,
-        concat!("Size of: ", stringify!(bam_pileup_cd))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<bam_pileup_cd>(),
-        8usize,
-        concat!("Alignment of ", stringify!(bam_pileup_cd))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup_cd>())).p as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup_cd),
-            "::",
-            stringify!(p)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup_cd>())).i as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup_cd),
-            "::",
-            stringify!(i)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup_cd>())).f as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup_cd),
-            "::",
-            stringify!(f)
-        )
-    );
-}
-/// @typedef
-///@abstract Structure for one alignment covering the pileup position.
-///@field  b          pointer to the alignment
-///@field  qpos       position of the read base at the pileup site, 0-based
-///@field  indel      indel length; 0 for no indel, positive for ins and negative for del
-///@field  level      the level of the read in the "viewer" mode
-///@field  is_del     1 iff the base on the padded read is a deletion
-///@field  is_head    1 iff this is the first base in the query sequence
-///@field  is_tail    1 iff this is the last base in the query sequence
-///@field  is_refskip 1 iff the base on the padded read is part of CIGAR N op
-///@field  aux        (used by bcf_call_gap_prep())
-///@field  cigar_ind  index of the CIGAR operator that has just been processed
-///
-///@discussion See also bam_plbuf_push() and bam_lplbuf_push(). The
-///difference between the two functions is that the former does not
-///set bam_pileup1_t::level, while the later does. Level helps the
-///implementation of alignment viewers, but calculating this has some
-///overhead.
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bam_pileup1_t {
@@ -4253,80 +1485,6 @@ pub struct bam_pileup1_t {
     pub level: ::std::os::raw::c_int,
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u32>,
     pub cd: bam_pileup_cd,
-    pub cigar_ind: ::std::os::raw::c_int,
-}
-#[test]
-fn bindgen_test_layout_bam_pileup1_t() {
-    assert_eq!(
-        ::std::mem::size_of::<bam_pileup1_t>(),
-        40usize,
-        concat!("Size of: ", stringify!(bam_pileup1_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<bam_pileup1_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(bam_pileup1_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup1_t>())).b as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup1_t),
-            "::",
-            stringify!(b)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup1_t>())).qpos as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup1_t),
-            "::",
-            stringify!(qpos)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup1_t>())).indel as *const _ as usize },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup1_t),
-            "::",
-            stringify!(indel)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup1_t>())).level as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup1_t),
-            "::",
-            stringify!(level)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup1_t>())).cd as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup1_t),
-            "::",
-            stringify!(cd)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<bam_pileup1_t>())).cigar_ind as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(bam_pileup1_t),
-            "::",
-            stringify!(cigar_ind)
-        )
-    );
 }
 impl bam_pileup1_t {
     #[inline]
@@ -4375,13 +1533,13 @@ impl bam_pileup1_t {
     }
     #[inline]
     pub fn aux(&self) -> u32 {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 27u8) as u32) }
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 28u8) as u32) }
     }
     #[inline]
     pub fn set_aux(&mut self, val: u32) {
         unsafe {
             let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(5usize, 27u8, val as u64)
+            self._bitfield_1.set(4usize, 28u8, val as u64)
         }
     }
     #[inline]
@@ -4410,7 +1568,7 @@ impl bam_pileup1_t {
             let is_refskip: u32 = unsafe { ::std::mem::transmute(is_refskip) };
             is_refskip as u64
         });
-        __bindgen_bitfield_unit.set(5usize, 27u8, {
+        __bindgen_bitfield_unit.set(4usize, 28u8, {
             let aux: u32 = unsafe { ::std::mem::transmute(aux) };
             aux as u64
         });
@@ -4436,10 +1594,6 @@ pub struct __bam_mplp_t {
 }
 pub type bam_mplp_t = *mut __bam_mplp_t;
 extern "C" {
-    ///  bam_plp_init() - sets an iterator over multiple
-    ///  @func:      see mplp_func in bam_plcmd.c in samtools for an example. Expected return
-    ///              status: 0 on success, -1 on end, < -1 on non-recoverable errors
-    ///  @data:      user data to pass to @func
     pub fn bam_plp_init(func: bam_plp_auto_f, data: *mut ::std::os::raw::c_void) -> bam_plp_t;
 }
 extern "C" {
@@ -4471,12 +1625,6 @@ extern "C" {
     pub fn bam_plp_reset(iter: bam_plp_t);
 }
 extern "C" {
-    ///  bam_plp_constructor() - sets a callback to initialise any per-pileup1_t fields.
-    ///  @plp:       The bam_plp_t initialised using bam_plp_init.
-    ///  @func:      The callback function itself.  When called, it is given the
-    ///              data argument (specified in bam_plp_init), the bam structure and
-    ///              a pointer to a locally allocated bam_pileup_cd union.  This union
-    ///              will also be present in each bam_pileup1_t created.
     pub fn bam_plp_constructor(
         plp: bam_plp_t,
         func: ::std::option::Option<
@@ -4501,26 +1649,6 @@ extern "C" {
     );
 }
 extern "C" {
-    /// Get pileup padded insertion sequence
-    ///**
-    ///* @param p       pileup data
-    ///* @param ins     the kstring where the insertion sequence will be written
-    ///* @param del_len location for deletion length
-    ///* @return the length of insertion string on success; -1 on failure.
-    ///*
-    ///* Fills out the kstring with the padded insertion sequence for the current
-    ///* location in 'p'.  If this is not an insertion site, the string is blank.
-    ///*
-    ///* If del_len is not NULL, the location pointed to is set to the length of
-    ///* any deletion immediately following the insertion, or zero if none.
-    ///*/
-    pub fn bam_plp_insertion(
-        p: *const bam_pileup1_t,
-        ins: *mut kstring_t,
-        del_len: *mut ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
     pub fn bam_mplp_init(
         n: ::std::os::raw::c_int,
         func: bam_plp_auto_f,
@@ -4528,19 +1656,7 @@ extern "C" {
     ) -> bam_mplp_t;
 }
 extern "C" {
-    /// Set up mpileup overlap detection
-    ///**
-    ///* @param iter    mpileup iterator
-    ///* @return 0 on success; a negative value on error
-    ///*
-    ///*  If called, mpileup will detect overlapping
-    ///*  read pairs and for each base pair set the base quality of the
-    ///*  lower-quality base to zero, thus effectively discarding it from
-    ///*  calling. If the two bases are identical, the quality of the other base
-    ///*  is increased to the sum of their qualities (capped at 200), otherwise
-    ///*  it is multiplied by 0.8.
-    ///*/
-    pub fn bam_mplp_init_overlaps(iter: bam_mplp_t) -> ::std::os::raw::c_int;
+    pub fn bam_mplp_init_overlaps(iter: bam_mplp_t);
 }
 extern "C" {
     pub fn bam_mplp_destroy(iter: bam_mplp_t);
@@ -4585,7 +1701,6 @@ extern "C" {
     );
 }
 extern "C" {
-    /// BAQ calculation and realignment *
     pub fn sam_cap_mapq(
         b: *mut bam1_t,
         ref_: *const ::std::os::raw::c_char,
@@ -4594,45 +1709,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Calculate BAQ scores
-    ///** @param b   BAM record
-    ///@param ref     Reference sequence
-    ///@param ref_len Reference sequence length
-    ///@param flag    Flags, see description
-    ///@return 0 on success \n
-    ///-1 if the read was unmapped, zero length, had no quality values, did not have at least one M, X or = CIGAR operator, or included a reference skip. \n
-    ///-3 if BAQ alignment has already been done and does not need to be applied, or has already been applied. \n
-    ///-4 if alignment failed (most likely due to running out of memory)
-    ///
-    ///This function calculates base alignment quality (BAQ) values using the method
-    ///described in "Improving SNP discovery by base alignment quality", Heng Li,
-    ///Bioinformatics, Volume 27, Issue 8 (https://doi.org/10.1093/bioinformatics/btr076).
-    ///
-    ///The following @param flag bits can be used:
-    ///
-    ///Bit 0: Adjust the quality values using the BAQ values
-    ///
-    ///If set, the data in the BQ:Z tag is used to adjust the quality values, and
-    ///the BQ:Z tag is renamed to ZQ:Z.
-    ///
-    ///If clear, and a ZQ:Z tag is present, the quality values are reverted using
-    ///the data in the tag, and the tag is renamed to BQ:Z.
-    ///
-    ///Bit 1: Use "extended" BAQ.
-    ///
-    ///Changes the BAQ calculation to increase sensitivity at the expense of
-    ///reduced specificity.
-    ///
-    ///Bit 2: Recalculate BAQ, even if a BQ tag is present.
-    ///
-    ///Force BAQ to be recalculated.  Note that a ZQ:Z tag will always disable
-    ///recalculation.
-    ///
-    ///@bug
-    ///If the input read has both BQ:Z and ZQ:Z tags, the ZQ:Z one will be removed.
-    ///Depending on what previous processing happened, this may or may not be the
-    ///correct thing to do.  It would be wise to avoid this situation if possible.
-    ///*/
     pub fn sam_prob_realn(
         b: *mut bam1_t,
         ref_: *const ::std::os::raw::c_char,
