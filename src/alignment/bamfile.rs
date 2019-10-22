@@ -49,6 +49,16 @@ impl Drop for BamFile {
 }
 
 impl BamFile {
+    pub fn reference_path<P: AsRef<Path>>(&self, path: P) {
+        unsafe {
+            hts_set_fai_filename(
+                self.fp,
+                CString::new(path.as_ref().as_os_str().as_bytes())
+                    .unwrap()
+                    .as_ptr(),
+            );
+        }
+    }
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, AlignmentError> {
         let mut ret = BamFile {
             path: Box::new(path.as_ref().to_path_buf()),

@@ -22,7 +22,7 @@ fn create_hts_bindings(base: &str) -> Result<(), ()> {
 }
 fn main() -> Result<(), std::io::Error> {
     let base = format!("{}", env::var("CARGO_MANIFEST_DIR").unwrap());
-    let hts_bin_path = format!("{}/htslib/libhts.so", base);
+    let hts_bin_path = format!("{}/htslib/libhts.a", base);
     if let Err(_) = create_hts_bindings(base.as_str()) {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -37,7 +37,11 @@ fn main() -> Result<(), std::io::Error> {
             .expect("Unable to call makefile for htslib");
     }
     println!("cargo:rustc-link-search={}/htslib/", base);
-    println!("cargo:rustc-link-lib=hts");
+    println!("cargo:rustc-link-lib=static=hts");
+    println!("cargo:rustc-link-lib=curl");
+    println!("cargo:rustc-link-lib=z");
+    println!("cargo:rustc-link-lib=lzma");
+    println!("cargo:rustc-link-lib=bz2");
 
     Ok(())
 }
